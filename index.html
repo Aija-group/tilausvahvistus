@@ -136,6 +136,7 @@ table.items{width:100%;border-collapse:collapse;font-size:9.5pt;margin-bottom:6p
   </div>
   <div class="actions">
     <button class="btn primary" id="btnPdf">Tallenna PDF</button>
+    <button class="btn" id="btnSend">Lähetä Sulolle</button>
   </div>
 
   <details open>
@@ -211,6 +212,30 @@ table.items{width:100%;border-collapse:collapse;font-size:9.5pt;margin-bottom:6p
 <main class="stage"><article class="doc" id="doc"></article></main>
 </div>
 <div class="toast" id="toast"></div>
+<!-- Netlify Forms tunnistaa lomakkeen tästä; varsinainen lähetys tehdään JS:llä (sendToSulo) -->
+<form name="tilausvahvistus" data-netlify="true" netlify-honeypot="bot-field" hidden>
+  <input name="bot-field">
+  <textarea name="tilausnumero"></textarea>
+  <textarea name="paivays"></textarea>
+  <textarea name="viite"></textarea>
+  <textarea name="asiakas"></textarea>
+  <textarea name="ytunnus"></textarea>
+  <textarea name="yhteyshenkilo"></textarea>
+  <textarea name="sahkoposti"></textarea>
+  <textarea name="puhelin"></textarea>
+  <textarea name="laskutusosoite"></textarea>
+  <textarea name="verkkolasku"></textarea>
+  <textarea name="tilausrivit"></textarea>
+  <textarea name="kertaluonteiset"></textarea>
+  <textarea name="kuukausittain"></textarea>
+  <textarea name="aloitus"></textarea>
+  <textarea name="valmistuminen"></textarea>
+  <textarea name="laskutus"></textarea>
+  <textarea name="maksuehto"></textarea>
+  <textarea name="sopimuskausi"></textarea>
+  <textarea name="asiakkaalta"></textarea>
+  <textarea name="lisatiedot"></textarea>
+</form>
 
 <script>
 const MARK = '<svg viewBox="0 0 40 40"><rect width="40" height="40" rx="9" fill="#14130f"/><circle cx="14" cy="14" r="4" fill="#ff4d1a"/><circle cx="26" cy="14" r="4" fill="#ff4d1a"/><rect x="9" y="24" width="22" height="5" rx="2.5" fill="#f4f1ea"/></svg>';
@@ -414,6 +439,39 @@ window.addEventListener("afterprint",()=>{
   document.querySelector('[data-k="o.number"]').value=state.o.number;
   update(); toast("Seuraava tilausnumero: "+state.o.number);
 });
+
+// ---------- Lähetä Sulolle (Netlify Forms → sähköposti-ilmoitus laskutukseen) ----------
+function sendFields(){
+  const c=state.c,o=state.o,t=state.t,k=calc(),vatP=pct(num(o.vat));
+  const rows=[...k.once.rows,...k.monthly.rows].map(r=>
+    `${r.name||"Tuote / palvelu"}: ${String(r.qty).replace(".",",")} ${r.unit} × ${eur(r.unitNet)} = ${eur(r.lineNet)} alv 0 %${r.type==="monthly"?" / kk":""}${r.desc?"\n   "+r.desc.replace(/\n/g,"\n   "):""}`).join("\n");
+  const sum=g=>`${eur(g.net)} alv 0 % + alv ${vatP} ${eur(g.vat)} = ${eur(g.gross)}`;
+  return {
+    tilausnumero:o.number, paivays:fiDate(o.date), viite:o.ref,
+    asiakas:c.company, ytunnus:c.ytunnus, yhteyshenkilo:c.contact, sahkoposti:c.email, puhelin:c.phone,
+    laskutusosoite:c.address, verkkolasku:c.einvoice, tilausrivit:rows,
+    kertaluonteiset:k.once.rows.length?sum(k.once):"", kuukausittain:k.monthly.rows.length?sum(k.monthly)+" / kk":"",
+    aloitus:t.start, valmistuminen:t.delivery, laskutus:t.billing, maksuehto:t.payment,
+    sopimuskausi:k.monthly.rows.length?t.term:"", asiakkaalta:t.needs, lisatiedot:t.notes
+  };
+}
+let sending=false;
+$("#btnSend").onclick=async()=>{
+  if(sending) return;
+  const k=calc();
+  if(!state.c.company){ toast("Asiakkaan yritys puuttuu"); return }
+  if(!k.once.rows.length && !k.monthly.rows.length){ toast("Tilausrivit puuttuvat"); return }
+  if(!confirm(`Lähetetäänkö tilaus ${state.o.number} (${state.c.company}) Sulolle laskutukseen?`)) return;
+  sending=true; const b=$("#btnSend"); b.textContent="Lähetetään…"; b.disabled=true;
+  try{
+    const body=new URLSearchParams({"form-name":"tilausvahvistus","bot-field":"",...sendFields()});
+    const res=await fetch("/",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:body.toString()});
+    if(!res.ok) throw new Error(res.status);
+    toast("Lähetetty Sulolle ✓");
+  }catch(e){ toast("Lähetys epäonnistui – yritä uudelleen") }
+  finally{ sending=false; b.textContent="Lähetä Sulolle"; b.disabled=false }
+};
+
 $("#addRow").onclick=()=>addRow();
 $("#presets").innerHTML = PRESETS.map((p,i)=>`<button class="chip" data-p="${i}">+ ${esc(p.name)}${p.type==="monthly"?" /kk":""}</button>`).join("");
 $("#presets").onclick=e=>{ const i=e.target.dataset.p; if(i!=null) addRow(PRESETS[i]) };
