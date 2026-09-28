@@ -181,7 +181,7 @@ table.items{width:100%;border-collapse:collapse;font-size:9.5pt;margin-bottom:6p
   <details open>
     <summary>Ehdot</summary>
     <div class="sec grid">
-      <div class="full"><label>Laskutus</label><textarea data-k="t.billing" rows="2" placeholder="Kertamaksu koko projektista."></textarea></div>
+      <div class="full"><label>Laskutus</label><textarea data-k="t.billing" rows="2" placeholder="Verkkosivu kertamaksulla, hosting 3 kk välein."></textarea></div>
       <div class="full"><label>Maksuehto</label><input data-k="t.payment" placeholder="7 vrk netto"></div>
       <div class="full"><label>Lisätiedot</label><textarea data-k="t.notes" rows="3" placeholder="Vapaa sana"></textarea></div>
       <label class="check full"><input type="checkbox" data-k="t.sign"> Näytä allekirjoituskohdat</label>
@@ -251,7 +251,7 @@ function nextNumber(){
   return "#" + n;
 }
 // Harmaat esimerkkitekstit, joita käytetään dokumentissa, jos kenttä jätetään tyhjäksi
-const FALLBACK = {intro:"Kiitos verkkosivutilauksestasi!", billing:"Kertamaksu koko projektista.", payment:"7 vrk netto"};
+const FALLBACK = {intro:"Kiitos verkkosivutilauksestasi!", billing:"Verkkosivu kertamaksulla, hosting 3 kk välein.", payment:"7 vrk netto"};
 const DEFAULT_ROWS = () => [
   {name:"", desc:"", qty:1, unit:"kpl", price:"", type:"once", ph:{name:"Verkkosivusto – esimerkki.fi", desc:"Sivuston modernisointi, hintalaskuri, asennus NordicHostiin"}},
   {name:"", desc:"", qty:1, unit:"kk", price:"", type:"monthly", ph:{name:"Hosting ja ylläpito", desc:"NordicHost.fi – Suomen tehokkainta hostingia"}},
