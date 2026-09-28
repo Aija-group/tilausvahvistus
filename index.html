@@ -207,6 +207,7 @@ table.items{width:100%;border-collapse:collapse;font-size:9.5pt;margin-bottom:6p
   <div class="actions">
     <button class="btn primary" id="btnPdf">Tallenna PDF</button>
     <button class="btn" id="btnSend">Lähetä Sulolle</button>
+    <button class="btn ghost" id="btnClear">Tyhjennä kentät</button>
   </div>
 </main>
 </div>
@@ -481,6 +482,14 @@ $("#btnSend").onclick=async()=>{
   finally{ sending=false; b.textContent="Lähetä Sulolle"; b.disabled=false }
 };
 
+// Tyhjentää tilauksen; lähettäjän tiedot ja tilausnumero säilyvät, päiväys tälle päivälle
+$("#btnClear").onclick=()=>{
+  if(!confirm("Tyhjennetäänkö kaikki kentät? Lähettäjän tiedot ja tilausnumero säilyvät.")) return;
+  const keep={s:state.s, number:state.o.number};
+  state=blankOrder(keep.s); state.o.number=keep.number;
+  bindFields(); renderRows(); update(); window.scrollTo(0,0); document.querySelector('.editor').scrollTop=0;
+  toast("Kentät tyhjennetty");
+};
 $("#addRow").onclick=()=>addRow();
 $("#presets").innerHTML = PRESETS.map((p,i)=>`<button class="chip" data-p="${i}">+ ${esc(p.name)}${p.type==="monthly"?" /kk":""}</button>`).join("");
 $("#presets").onclick=e=>{ const i=e.target.dataset.p; if(i!=null) addRow(PRESETS[i]) };
