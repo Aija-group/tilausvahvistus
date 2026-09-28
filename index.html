@@ -27,7 +27,8 @@ body{background:var(--bg);color:var(--ink);font:14px/1.45 var(--body)}
 .editor-head svg{width:26px;height:26px;flex:none}
 .editor-head b{font:800 16px var(--display);letter-spacing:.01em}
 .editor-head span{color:#b9b3a4;font-size:12px;margin-left:auto}
-.actions{position:sticky;top:54px;z-index:4;background:var(--panel);border-bottom:1px solid var(--line);padding:12px 18px;display:flex;flex-wrap:wrap;gap:8px}
+.actions{width:210mm;max-width:100%;margin:20px auto 0;display:flex;justify-content:center;flex-wrap:wrap;gap:12px}
+.actions .btn{font-size:15px;padding:12px 22px;border-radius:10px}
 .btn{font:600 13px var(--body);border:1px solid var(--ink);background:#fff;color:var(--ink);border-radius:8px;padding:8px 12px;cursor:pointer}
 .btn:hover{background:var(--paper)}
 .btn.primary{background:var(--orange);border-color:var(--orange);color:#fff}
@@ -118,7 +119,7 @@ table.items{width:100%;border-collapse:collapse;font-size:9.5pt;margin-bottom:6p
 @media print{
   @page{size:A4;margin:0}
   body{background:#fff}
-  .editor,.toast{display:none!important}
+  .editor,.toast,.actions{display:none!important}
   .app{display:block}
   .stage{padding:0;overflow:visible}
   .doc{box-shadow:none;margin:0;width:210mm;min-height:297mm}
@@ -134,10 +135,6 @@ table.items{width:100%;border-collapse:collapse;font-size:9.5pt;margin-bottom:6p
   <div class="editor-head">
     <svg viewBox="0 0 40 40"><rect width="40" height="40" rx="9" fill="#14130f" stroke="#3a3830"/><circle cx="14" cy="14" r="4" fill="#ff4d1a"/><circle cx="26" cy="14" r="4" fill="#ff4d1a"/><rect x="9" y="24" width="22" height="5" rx="2.5" fill="#f4f1ea"/></svg>
     <b>Tilausvahvistus</b><span id="saved">Tallennettu</span>
-  </div>
-  <div class="actions">
-    <button class="btn primary" id="btnPdf">Tallenna PDF</button>
-    <button class="btn" id="btnSend">Lähetä Sulolle</button>
   </div>
 
   <details open>
@@ -206,7 +203,12 @@ table.items{width:100%;border-collapse:collapse;font-size:9.5pt;margin-bottom:6p
 </aside>
 
 <!-- ================= DOKUMENTTI ================= -->
-<main class="stage"><article class="doc" id="doc"></article></main>
+<main class="stage"><article class="doc" id="doc"></article>
+  <div class="actions">
+    <button class="btn primary" id="btnPdf">Tallenna PDF</button>
+    <button class="btn" id="btnSend">Lähetä Sulolle</button>
+  </div>
+</main>
 </div>
 <div class="toast" id="toast"></div>
 <!-- Netlify Forms tunnistaa lomakkeen tästä; varsinainen lähetys tehdään JS:llä (sendToSulo) -->
