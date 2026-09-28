@@ -403,7 +403,17 @@ function bindFields(){
 }
 
 // ---------- napit ----------
-$("#btnPdf").onclick=()=>{ bumpSeq(); window.print() };
+// PDF-tallennuksen jälkeen tilausnumero siirtyy seuraavaan (AG-2026-001 → AG-2026-002).
+// Vaihto tehdään vasta tulostusikkunan sulkeuduttua, jottei PDF:ään mene jo uusi numero.
+let printing=false;
+$("#btnPdf").onclick=()=>{ printing=true; bumpSeq(); window.print() };
+window.addEventListener("afterprint",()=>{
+  if(!printing) return; printing=false;
+  const m=(state.o.number||"").match(/^(.*?)(\d+)$/);
+  state.o.number = m ? m[1]+String(parseInt(m[2],10)+1).padStart(m[2].length,"0") : nextNumber();
+  document.querySelector('[data-k="o.number"]').value=state.o.number;
+  update(); toast("Seuraava tilausnumero: "+state.o.number);
+});
 $("#addRow").onclick=()=>addRow();
 $("#presets").innerHTML = PRESETS.map((p,i)=>`<button class="chip" data-p="${i}">+ ${esc(p.name)}${p.type==="monthly"?" /kk":""}</button>`).join("");
 $("#presets").onclick=e=>{ const i=e.target.dataset.p; if(i!=null) addRow(PRESETS[i]) };
