@@ -47,6 +47,7 @@ summary small{font:400 12px var(--body);color:var(--muted);margin-left:auto}
 label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px}
 input,textarea,select{width:100%;font:14px var(--body);color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:7px;padding:8px 9px}
 textarea{resize:vertical;min-height:62px}
+input::placeholder,textarea::placeholder{color:#aaa596;opacity:1}
 input:focus,textarea:focus,select:focus{outline:2px solid var(--orange);outline-offset:-1px;border-color:transparent}
 .hint{font-size:12px;color:var(--muted);margin:6px 0 0}
 .row-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px}
@@ -144,7 +145,7 @@ table.items{width:100%;border-collapse:collapse;font-size:9.5pt;margin-bottom:6p
     <div class="sec grid">
       <div class="full"><label>Yritys</label><input data-k="c.company" placeholder="Esimerkki Oy"></div>
       <div><label>Y-tunnus</label><input data-k="c.ytunnus" placeholder="1234567-8"></div>
-      <div><label>Yhteyshenkilö</label><input data-k="c.contact"></div>
+      <div><label>Yhteyshenkilö</label><input data-k="c.contact" placeholder="Matti Meikäläinen"></div>
       <div><label>Sähköposti</label><input data-k="c.email" type="email"></div>
       <div><label>Puhelin</label><input data-k="c.phone"></div>
       <div class="full"><label>Laskutusosoite</label><textarea data-k="c.address" rows="2" placeholder="Katuosoite&#10;00100 Kaupunki"></textarea></div>
@@ -155,10 +156,10 @@ table.items{width:100%;border-collapse:collapse;font-size:9.5pt;margin-bottom:6p
   <details open>
     <summary>Tilauksen tiedot</summary>
     <div class="sec grid">
-      <div><label>Tilausnumero</label><input data-k="o.number"></div>
+      <div><label>Tilausnumero</label><input data-k="o.number" placeholder="#2"></div>
       <div><label>Päiväys</label><input data-k="o.date" type="date"></div>
-      <div class="full"><label>Asiakkaan viite (valinnainen)</label><input data-k="o.ref" placeholder="esim. tarjous 12.9. / tilaajan viite"></div>
-      <div class="full"><label>Saateteksti dokumentissa</label><textarea data-k="o.intro" rows="3"></textarea></div>
+      <div class="full"><label>Asiakkaan viite</label><input data-k="o.ref" placeholder="Valinnainen – tulee laskulle"></div>
+      <div class="full"><label>Saateteksti dokumentissa</label><textarea data-k="o.intro" rows="2" placeholder="Kiitos verkkosivutilauksestasi!"></textarea></div>
     </div>
   </details>
 
@@ -178,15 +179,11 @@ table.items{width:100%;border-collapse:collapse;font-size:9.5pt;margin-bottom:6p
   </details>
 
   <details open>
-    <summary>Ehdot ja aikataulu</summary>
+    <summary>Ehdot</summary>
     <div class="sec grid">
-      <div><label>Työn aloitus</label><input data-k="t.start" placeholder="esim. viikko 41"></div>
-      <div><label>Arvioitu valmistuminen</label><input data-k="t.delivery" placeholder="esim. 3–4 viikkoa aloituksesta"></div>
-      <div class="full"><label>Laskutus</label><textarea data-k="t.billing" rows="2"></textarea></div>
-      <div><label>Maksuehto</label><input data-k="t.payment"></div>
-      <div><label>Kuukausipalveluiden sopimuskausi</label><input data-k="t.term" placeholder="esim. toistaiseksi, irtisanomisaika 1 kk"></div>
-      <div class="full"><label>Asiakkaalta tarvitaan</label><textarea data-k="t.needs" rows="2" placeholder="esim. hosting-tunnukset, logo, kuvat"></textarea></div>
-      <div class="full"><label>Lisätiedot ja ehdot</label><textarea data-k="t.notes" rows="4"></textarea></div>
+      <div class="full"><label>Laskutus</label><textarea data-k="t.billing" rows="2" placeholder="Kertamaksu koko projektista."></textarea></div>
+      <div class="full"><label>Maksuehto</label><input data-k="t.payment" placeholder="7 vrk netto"></div>
+      <div class="full"><label>Lisätiedot</label><textarea data-k="t.notes" rows="3" placeholder="Vapaa sana"></textarea></div>
       <label class="check full"><input type="checkbox" data-k="t.sign"> Näytä allekirjoituskohdat</label>
     </div>
   </details>
@@ -228,12 +225,8 @@ table.items{width:100%;border-collapse:collapse;font-size:9.5pt;margin-bottom:6p
   <textarea name="tilausrivit"></textarea>
   <textarea name="kertaluonteiset"></textarea>
   <textarea name="kuukausittain"></textarea>
-  <textarea name="aloitus"></textarea>
-  <textarea name="valmistuminen"></textarea>
   <textarea name="laskutus"></textarea>
   <textarea name="maksuehto"></textarea>
-  <textarea name="sopimuskausi"></textarea>
-  <textarea name="asiakkaalta"></textarea>
   <textarea name="lisatiedot"></textarea>
 </form>
 
@@ -245,7 +238,7 @@ const PRESETS = [
   {name:"Viestiaudit", type:"once", unit:"kpl"},
   {name:"Positiointi ja myyntiviesti", type:"once", unit:"kpl"},
   {name:"Verkkosivusto", type:"once", unit:"kpl"},
-  {name:"Hosting ja ylläpito", type:"monthly", unit:"kk"},
+  {name:"Hosting ja ylläpito", type:"monthly", unit:"kk", desc:"NordicHost.fi – Suomen tehokkainta hostingia"},
   {name:"Kumppanuus", type:"monthly", unit:"kk"},
   {name:"Lisätyö", type:"once", unit:"h"},
 ];
@@ -255,25 +248,41 @@ const SENDER_DEFAULT = {company:"Äijä Group Oy", ytunnus:"", contact:"Sulo Mä
 const today = () => new Date().toISOString().slice(0,10);
 function nextNumber(){
   let n = 1; try{ n = parseInt(localStorage.getItem("ag_tv_seq")||"0",10)+1 }catch(e){}
-  return "AG-" + new Date().getFullYear() + "-" + String(n).padStart(3,"0");
+  return "#" + n;
 }
+// Harmaat esimerkkitekstit, joita käytetään dokumentissa, jos kenttä jätetään tyhjäksi
+const FALLBACK = {intro:"Kiitos verkkosivutilauksestasi!", billing:"Kertamaksu koko projektista.", payment:"7 vrk netto"};
+const DEFAULT_ROWS = () => [
+  {name:"", desc:"", qty:1, unit:"kpl", price:"", type:"once", ph:{name:"Verkkosivusto – esimerkki.fi", desc:"Sivuston modernisointi, hintalaskuri, asennus NordicHostiin"}},
+  {name:"", desc:"", qty:1, unit:"kk", price:"", type:"monthly", ph:{name:"Hosting ja ylläpito", desc:"NordicHost.fi – Suomen tehokkainta hostingia"}},
+];
 function bumpSeq(){ try{ const m=(state.o.number||"").match(/(\d+)$/); if(m){ const cur=parseInt(localStorage.getItem("ag_tv_seq")||"0",10); localStorage.setItem("ag_tv_seq", Math.max(cur, parseInt(m[1],10))) } }catch(e){} }
 
 function blankOrder(sender){
   return {
     s: sender || {...SENDER_DEFAULT},
     c: {company:"", ytunnus:"", contact:"", email:"", phone:"", address:"", einvoice:""},
-    o: {number: nextNumber(), date: today(), ref:"", vat:25.5, priceMode:"net",
-        intro:"Kiitos tilauksestanne. Vahvistamme tällä tilauksen alla olevan sisällön mukaisesti."},
-    rows: [{name:"", desc:"", qty:1, unit:"kpl", price:"", type:"once"}],
-    t: {start:"", delivery:"", billing:"", payment:"14 päivää netto", term:"", needs:"",
-        notes:"Pyydämme tarkistamaan tilauksen tiedot. Jos jokin ei vastaa sovittua, ilmoitattehan meille mahdollisimman pian.", sign:false}
+    v: 2,
+    o: {number: nextNumber(), date: today(), ref:"", vat:25.5, priceMode:"net", intro:""},
+    rows: DEFAULT_ROWS(),
+    t: {billing:"", payment:"", notes:"", sign:false}
   };
 }
 
 let state;
 try{ state = JSON.parse(localStorage.getItem("ag_tv_current")||"null") }catch(e){ state=null }
 if(!state) state = blankOrder(loadSender());
+// Vanhan version (v1) tallennus: pois vanhat oletustekstit ja poistetut kentät, numero muotoon #N
+if(state && !state.v){
+  const OLD = ["Kiitos tilauksestanne. Vahvistamme tällä tilauksen alla olevan sisällön mukaisesti.","14 päivää netto",
+               "Pyydämme tarkistamaan tilauksen tiedot. Jos jokin ei vastaa sovittua, ilmoitattehan meille mahdollisimman pian."];
+  if(OLD.includes(state.o.intro)) state.o.intro="";
+  for(const k of ["payment","notes"]) if(OLD.includes(state.t[k])) state.t[k]="";
+  for(const k of ["start","delivery","term","needs"]) delete state.t[k];
+  const m=(state.o.number||"").match(/^AG-\d{4}-(\d+)$/); if(m) state.o.number="#"+parseInt(m[1],10);
+  if(state.rows.length===1 && !state.rows[0].name && !state.rows[0].price && !state.rows[0].desc) state.rows=DEFAULT_ROWS();
+  state.v=2;
+}
 function loadSender(){ try{ const s=JSON.parse(localStorage.getItem("ag_tv_sender")||"null"); if(s) return {...SENDER_DEFAULT,...s} }catch(e){} return {...SENDER_DEFAULT} }
 
 // ---------- apurit ----------
@@ -322,13 +331,13 @@ function renderRows(){
     const d=document.createElement("div"); d.className="row-card";
     d.innerHTML=`
       <div class="top"><span class="n">${i+1}</span>
-        <input data-r="name" placeholder="Tuote / palvelu" value="${esc(r.name)}">
+        <input data-r="name" placeholder="${esc(r.ph?.name||"Tuote / palvelu")}" value="${esc(r.name)}">
         <div class="icons">
           <button class="icon" data-act="up" title="Siirrä ylös">↑</button>
           <button class="icon" data-act="down" title="Siirrä alas">↓</button>
           <button class="icon" data-act="del" title="Poista">×</button>
         </div></div>
-      <textarea data-r="desc" rows="2" placeholder="Mitä sisältyy (näkyy dokumentissa)">${esc(r.desc)}</textarea>
+      <textarea data-r="desc" rows="2" placeholder="${esc(r.ph?.desc||"Sisältö (näkyy dokumentissa)")}">${esc(r.desc)}</textarea>
       <div class="g4">
         <div><label>Määrä</label><input data-r="qty" inputmode="decimal" value="${esc(r.qty)}"></div>
         <div><label>Yksikkö</label><input data-r="unit" value="${esc(r.unit)}"></div>
@@ -341,7 +350,7 @@ function renderRows(){
     d.addEventListener("change",e=>{ if(e.target.dataset.r==="type"){ state.rows[i].type=e.target.value; update() } });
     d.querySelectorAll("[data-act]").forEach(b=>b.onclick=()=>{
       const a=b.dataset.act;
-      if(a==="del"){ state.rows.splice(i,1); if(!state.rows.length) state.rows.push({name:"",desc:"",qty:1,unit:"kpl",price:"",type:"once"}) }
+      if(a==="del"){ state.rows.splice(i,1); if(!state.rows.length) state.rows.push(DEFAULT_ROWS()[0]) }
       if(a==="up" && i>0) [state.rows[i-1],state.rows[i]]=[state.rows[i],state.rows[i-1]];
       if(a==="down" && i<state.rows.length-1) [state.rows[i+1],state.rows[i]]=[state.rows[i],state.rows[i+1]];
       renderRows(); update();
@@ -350,9 +359,9 @@ function renderRows(){
   });
 }
 function addRow(p){
-  const r={name:p?.name||"",desc:"",qty:1,unit:p?.unit||"kpl",price:"",type:p?.type||"once"};
+  const r={name:p?.name||"",desc:p?.desc||"",qty:1,unit:p?.unit||"kpl",price:"",type:p?.type||"once"};
   const last=state.rows.at(-1);
-  if(last && !last.name && !last.price && !last.desc) state.rows[state.rows.length-1]=r; else state.rows.push(r);
+  if(p && last && !last.name && !last.price && !last.desc) state.rows[state.rows.length-1]=r; else state.rows.push(r);
   renderRows(); update();
   const inputs=document.querySelectorAll('#rows [data-r="price"]'); inputs[inputs.length-1]?.focus();
 }
@@ -384,8 +393,7 @@ function renderDoc(){
   if(k.once.rows.length) totals += totBox(k.once, k.monthly.rows.length?"Kertaluonteiset":"Yhteenveto","");
   if(k.monthly.rows.length) totals += totBox(k.monthly,"Kuukausittain"," / kk");
 
-  const terms = [["Työn aloitus",t.start],["Arvioitu valmistuminen",t.delivery],["Laskutus",t.billing],["Maksuehto",t.payment],
-                 ...(k.monthly.rows.length?[["Sopimuskausi",t.term]]:[]),["Asiakkaalta tarvitaan",t.needs]].filter(x=>x[1]);
+  const terms = [["Laskutus",t.billing||FALLBACK.billing],["Maksuehto",t.payment||FALLBACK.payment]];
 
   const cust = [c.contact, c.address, c.ytunnus&&("Y-tunnus "+c.ytunnus), c.email, c.phone, c.einvoice&&("Verkkolasku: "+c.einvoice)].filter(Boolean).map(esc).join("\n");
   const send = [s.contact, s.address, s.email, s.phone].filter(Boolean).map(esc).join("\n");
@@ -399,14 +407,14 @@ function renderDoc(){
     </div>
     <div class="bar"></div>
     <div class="parties">
-      <div class="party"><h3>Tilaaja</h3><p class="name">${E(c.company,"Asiakkaan yritys")}</p><p>${cust}</p></div>
+      <div class="party"><h3>Tilaaja</h3><p class="name">${E(c.company,"Esimerkki Oy")}</p><p>${cust}</p></div>
       <div class="party"><h3>Toimittaja</h3><p class="name">${E(s.company,"Yritys")}</p><p>${send}</p></div>
     </div>
-    ${o.intro?`<p class="intro">${esc(o.intro)}</p>`:""}
+    <p class="intro">${esc(o.intro||FALLBACK.intro)}</p>
     <table class="items"><thead><tr><th>Tuote / palvelu</th><th class="num">Määrä</th><th class="num">À-hinta alv 0 %</th><th class="num">Yhteensä alv 0 %</th></tr></thead>
       <tbody>${body}</tbody></table>
     ${totals?`<div class="totals">${totals}</div>`:""}
-    ${terms.length?`<div class="d-sec"><h3>Ehdot ja aikataulu</h3><dl class="terms">${terms.map(([a,b])=>`<dt>${a}</dt><dd>${esc(b)}</dd>`).join("")}</dl></div>`:""}
+    ${terms.length?`<div class="d-sec"><h3>Ehdot</h3><dl class="terms">${terms.map(([a,b])=>`<dt>${a}</dt><dd>${esc(b)}</dd>`).join("")}</dl></div>`:""}
     ${t.notes?`<div class="d-sec"><h3>Lisätiedot</h3><p>${esc(t.notes)}</p></div>`:""}
     ${t.sign?`<div class="sign"><div class="line">Tilaaja – päiväys, allekirjoitus ja nimenselvennys</div><div class="line">${esc(s.company)} – päiväys ja allekirjoitus</div></div>`:""}
     <footer class="d-foot"><b>${esc(s.company)}</b>${s.ytunnus?`<span>Y-tunnus ${esc(s.ytunnus)}</span>`:""}${s.web?`<span>${esc(s.web)}</span>`:""}${s.email?`<span>${esc(s.email)}</span>`:""}${s.phone?`<span>${esc(s.phone)}</span>`:""}${s.iban?`<span>IBAN ${esc(s.iban)}</span>`:""}</footer>`;
@@ -428,7 +436,7 @@ function bindFields(){
 }
 
 // ---------- napit ----------
-// PDF-tallennuksen jälkeen tilausnumero siirtyy seuraavaan (AG-2026-001 → AG-2026-002).
+// PDF-tallennuksen jälkeen tilausnumero siirtyy seuraavaan (#2 → #3).
 // Vaihto tehdään vasta tulostusikkunan sulkeuduttua, jottei PDF:ään mene jo uusi numero.
 let printing=false;
 $("#btnPdf").onclick=()=>{ printing=true; bumpSeq(); window.print() };
@@ -451,8 +459,7 @@ function sendFields(){
     asiakas:c.company, ytunnus:c.ytunnus, yhteyshenkilo:c.contact, sahkoposti:c.email, puhelin:c.phone,
     laskutusosoite:c.address, verkkolasku:c.einvoice, tilausrivit:rows,
     kertaluonteiset:k.once.rows.length?sum(k.once):"", kuukausittain:k.monthly.rows.length?sum(k.monthly)+" / kk":"",
-    aloitus:t.start, valmistuminen:t.delivery, laskutus:t.billing, maksuehto:t.payment,
-    sopimuskausi:k.monthly.rows.length?t.term:"", asiakkaalta:t.needs, lisatiedot:t.notes
+    laskutus:t.billing||FALLBACK.billing, maksuehto:t.payment||FALLBACK.payment, lisatiedot:t.notes
   };
 }
 let sending=false;
