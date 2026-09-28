@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tilausvahvistus</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14130f; --paper:#f4f1ea; --orange:#ff4d1a;
+  --muted:#6b675d; --line:#dcd6c8; --panel:#fbfaf6; --bg:#e9e5da;
+  --display:"Bricolage Grotesque",system-ui,sans-serif;
+  --body:"Inter",system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 var(--body)}
+.app{display:grid;grid-template-columns:minmax(360px,440px) 1fr;min-height:100vh}
+
+/* ---------- Lomake ---------- */
+.editor{background:var(--panel);border-right:1px solid var(--line);height:100vh;overflow-y:auto;position:sticky;top:0}
+.editor-head{position:sticky;top:0;z-index:5;background:var(--ink);color:var(--paper);padding:14px 18px;display:flex;align-items:center;gap:10px}
+.editor-head svg{width:26px;height:26px;flex:none}
+.editor-head b{font:800 16px var(--display);letter-spacing:.01em}
+.editor-head span{color:#b9b3a4;font-size:12px;margin-left:auto}
+.actions{position:sticky;top:54px;z-index:4;background:var(--panel);border-bottom:1px solid var(--line);padding:12px 18px;display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:600 13px var(--body);border:1px solid var(--ink);background:#fff;color:var(--ink);border-radius:8px;padding:8px 12px;cursor:pointer}
+.btn:hover{background:var(--paper)}
+.btn.primary{background:var(--orange);border-color:var(--orange);color:#fff}
+.btn.primary:hover{filter:brightness(.95)}
+.btn.small{padding:5px 9px;font-size:12px}
+.btn.ghost{border-color:var(--line);color:var(--muted)}
+.btn.danger{border-color:#e3b3a5;color:#b3361a}
+details{border-bottom:1px solid var(--line)}
+summary{list-style:none;cursor:pointer;padding:14px 18px;font:700 15px var(--display);display:flex;align-items:center;gap:8px}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"";width:7px;height:7px;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:rotate(-45deg);transition:transform .15s}
+details[open]>summary::before{transform:rotate(45deg)}
+summary small{font:400 12px var(--body);color:var(--muted);margin-left:auto}
+.sec{padding:0 18px 18px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid .full{grid-column:1/-1}
+label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px}
+input,textarea,select{width:100%;font:14px var(--body);color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:7px;padding:8px 9px}
+textarea{resize:vertical;min-height:62px}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--orange);outline-offset:-1px;border-color:transparent}
+.hint{font-size:12px;color:var(--muted);margin:6px 0 0}
+.row-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px}
+.row-card .top{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.row-card .top .n{font:800 13px var(--display);color:var(--orange);width:20px}
+.row-card .top input{font-weight:600}
+.row-card .g4{display:grid;grid-template-columns:.8fr .9fr 1.2fr 1.3fr;gap:8px;margin-top:8px}
+.row-card .icons{display:flex;gap:4px}
+.icon{border:1px solid var(--line);background:#fff;border-radius:6px;width:28px;height:30px;cursor:pointer;color:var(--muted);font-size:14px;line-height:1;flex:none}
+.icon:hover{color:var(--ink);border-color:var(--ink)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 12px}
+.chip{font:500 12px var(--body);border:1px dashed var(--muted);background:transparent;border-radius:99px;padding:5px 10px;cursor:pointer;color:var(--ink)}
+.chip:hover{border-style:solid;background:#fff}
+.check{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--ink);font-weight:500;margin-top:8px}
+.check input{width:auto}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:9px;font-weight:500;opacity:0;transition:.2s;pointer-events:none;z-index:50}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ---------- Esikatselu / dokumentti ---------- */
+.stage{padding:32px 24px 64px;overflow:auto}
+.doc{width:210mm;min-height:297mm;margin:0 auto;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.06),0 12px 40px rgba(20,19,15,.12);padding:16mm 16mm 14mm;display:flex;flex-direction:column;font-size:10pt;line-height:1.45}
+.d-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand svg{width:40px;height:40px}
+.brand .word{font:800 20pt/0.9 var(--display);letter-spacing:.01em}
+.brand .word small{display:block;font:500 7.5pt var(--body);letter-spacing:.42em;margin-top:3px}
+.d-title{text-align:right}
+.d-title h1{font:800 22pt/1 var(--display);margin:0 0 8px;letter-spacing:-.01em}
+.meta{display:grid;grid-template-columns:auto auto;gap:2px 14px;justify-content:end;font-size:9pt}
+.meta dt{color:var(--muted)}
+.meta dd{margin:0;font-weight:600;text-align:right}
+.bar{height:4px;background:var(--ink);margin:14px 0 18px;position:relative}
+.bar::after{content:"";position:absolute;left:0;top:0;width:44px;height:4px;background:var(--orange)}
+.parties{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:18px}
+.party h3,.d-sec h3{font:600 7.5pt var(--body);text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin:0 0 6px}
+.party p{margin:0;white-space:pre-line}
+.party .name{font-weight:600;font-size:11pt}
+.intro{margin:0 0 18px;white-space:pre-line}
+table.items{width:100%;border-collapse:collapse;font-size:9.5pt;margin-bottom:6px}
+.items th{font:600 7.5pt var(--body);text-transform:uppercase;letter-spacing:.1em;color:var(--muted);text-align:left;padding:0 6px 6px;border-bottom:1.5px solid var(--ink)}
+.items td{padding:9px 6px;border-bottom:1px solid #e8e4da;vertical-align:top}
+.items .num{text-align:right;white-space:nowrap}
+.items .desc{color:var(--muted);font-size:8.5pt;white-space:pre-line;margin-top:2px}
+.items .item-name{font-weight:600}
+.items tr.group td{padding:12px 6px 4px;font:600 8pt var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--orange);border-bottom:none}
+.totals{display:flex;justify-content:flex-end;gap:24px;margin:8px 0 20px;flex-wrap:wrap}
+.tot{min-width:230px;font-size:9.5pt}
+.tot h4{font:600 7.5pt var(--body);text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:0 0 4px}
+.tot .l{display:flex;justify-content:space-between;padding:3px 0}
+.tot .l.sum{border-top:1.5px solid var(--ink);margin-top:4px;padding-top:6px;font-weight:700;font-size:11pt}
+.d-sec{margin-bottom:14px;break-inside:avoid}
+.terms{display:grid;grid-template-columns:auto 1fr;gap:4px 18px;font-size:9.5pt;margin:0}
+.terms dt{color:var(--muted)}
+.terms dd{margin:0;white-space:pre-line}
+.d-sec p{margin:0;white-space:pre-line}
+.sign{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:22px;break-inside:avoid}
+.sign .line{border-top:1px solid var(--ink);padding-top:5px;font-size:8.5pt;color:var(--muted);margin-top:34px}
+.d-foot{margin-top:auto;padding-top:16px;border-top:1px solid #e8e4da;display:flex;flex-wrap:wrap;gap:4px 16px;font-size:8pt;color:var(--muted)}
+.d-foot b{color:var(--ink);font-weight:600}
+.empty{color:#b8b2a3;font-style:italic}
+
+@media (max-width:980px){
+  .app{grid-template-columns:1fr}
+  .editor{height:auto;position:static}
+  .stage{padding:16px}
+  .doc{transform-origin:top left}
+}
+@media print{
+  @page{size:A4;margin:0}
+  body{background:#fff}
+  .editor,.toast{display:none!important}
+  .app{display:block}
+  .stage{padding:0;overflow:visible}
+  .doc{box-shadow:none;margin:0;width:210mm;min-height:297mm}
+  .empty{display:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ================= LOMAKE ================= -->
+<aside class="editor">
+  <div class="editor-head">
+    <svg viewBox="0 0 40 40"><rect width="40" height="40" rx="9" fill="#14130f" stroke="#3a3830"/><circle cx="14" cy="14" r="4" fill="#ff4d1a"/><circle cx="26" cy="14" r="4" fill="#ff4d1a"/><rect x="9" y="24" width="22" height="5" rx="2.5" fill="#f4f1ea"/></svg>
+    <b>Tilausvahvistus</b><span id="saved">Tallennettu</span>
+  </div>
+  <div class="actions">
+    <button class="btn primary" id="btnDocs">Kopioi Google Docsiin</button>
+    <button class="btn" id="btnPdf">Tallenna PDF</button>
+    <button class="btn" id="btnMail">Luo sähköposti</button>
+    <button class="btn" id="btnCopy">Kopioi saateviesti</button>
+    <button class="btn ghost" id="btnNew">Uusi tilaus</button>
+    <button class="btn ghost" id="btnExport">Vie luonnos</button>
+    <button class="btn ghost" id="btnImport">Avaa luonnos</button>
+    <input type="file" id="fileImport" accept=".json,application/json" hidden>
+  </div>
+
+  <details open>
+    <summary>Asiakas</summary>
+    <div class="sec grid">
+      <div class="full"><label>Yritys</label><input data-k="c.company" placeholder="Esimerkki Oy"></div>
+      <div><label>Y-tunnus</label><input data-k="c.ytunnus" placeholder="1234567-8"></div>
+      <div><label>Yhteyshenkilö</label><input data-k="c.contact"></div>
+      <div><label>Sähköposti</label><input data-k="c.email" type="email"></div>
+      <div><label>Puhelin</label><input data-k="c.phone"></div>
+      <div class="full"><label>Laskutusosoite</label><textarea data-k="c.address" rows="2" placeholder="Katuosoite&#10;00100 Kaupunki"></textarea></div>
+      <div class="full"><label>Verkkolaskuosoite / välittäjä (valinnainen)</label><input data-k="c.einvoice"></div>
+    </div>
+  </details>
+
+  <details open>
+    <summary>Tilauksen tiedot</summary>
+    <div class="sec grid">
+      <div><label>Tilausnumero</label><input data-k="o.number"></div>
+      <div><label>Päiväys</label><input data-k="o.date" type="date"></div>
+      <div class="full"><label>Asiakkaan viite (valinnainen)</label><input data-k="o.ref" placeholder="esim. tarjous 12.9. / tilaajan viite"></div>
+      <div class="full"><label>Saateteksti dokumentissa</label><textarea data-k="o.intro" rows="3"></textarea></div>
+    </div>
+  </details>
+
+  <details open>
+    <summary>Myyty kokonaisuus <small id="rowsum"></small></summary>
+    <div class="sec">
+      <label>Lisää pohjasta</label>
+      <div class="presets" id="presets"></div>
+      <div id="rows"></div>
+      <button class="btn small" id="addRow">+ Lisää rivi</button>
+      <div class="grid" style="margin-top:14px">
+        <div><label>ALV %</label><input data-k="o.vat" type="number" step="0.1" min="0"></div>
+        <div><label>Hinnat syötetään</label>
+          <select data-k="o.priceMode"><option value="net">alv 0 %</option><option value="gross">sis. alv</option></select></div>
+      </div>
+    </div>
+  </details>
+
+  <details open>
+    <summary>Ehdot ja aikataulu</summary>
+    <div class="sec grid">
+      <div><label>Työn aloitus</label><input data-k="t.start" placeholder="esim. viikko 41"></div>
+      <div><label>Arvioitu valmistuminen</label><input data-k="t.delivery" placeholder="esim. 3–4 viikkoa aloituksesta"></div>
+      <div class="full"><label>Laskutus</label><textarea data-k="t.billing" rows="2"></textarea></div>
+      <div><label>Maksuehto</label><input data-k="t.payment"></div>
+      <div><label>Kuukausipalveluiden sopimuskausi</label><input data-k="t.term" placeholder="esim. toistaiseksi, irtisanomisaika 1 kk"></div>
+      <div class="full"><label>Asiakkaalta tarvitaan</label><textarea data-k="t.needs" rows="2" placeholder="esim. hosting-tunnukset, logo, kuvat"></textarea></div>
+      <div class="full"><label>Lisätiedot ja ehdot</label><textarea data-k="t.notes" rows="4"></textarea></div>
+      <label class="check full"><input type="checkbox" data-k="t.sign"> Näytä allekirjoituskohdat</label>
+    </div>
+  </details>
+
+  <details>
+    <summary>Lähettäjä <small>tallentuu tälle koneelle</small></summary>
+    <div class="sec grid">
+      <div class="full"><label>Yritys</label><input data-k="s.company"></div>
+      <div><label>Y-tunnus</label><input data-k="s.ytunnus"></div>
+      <div><label>Yhteyshenkilö</label><input data-k="s.contact"></div>
+      <div><label>Sähköposti</label><input data-k="s.email"></div>
+      <div><label>Puhelin</label><input data-k="s.phone"></div>
+      <div class="full"><label>Osoite</label><textarea data-k="s.address" rows="2"></textarea></div>
+      <div><label>Verkkosivu</label><input data-k="s.web"></div>
+      <div><label>IBAN (valinnainen)</label><input data-k="s.iban"></div>
+      <p class="hint full">Nämä tiedot säilyvät, kun aloitat uuden tilauksen.</p>
+    </div>
+  </details>
+  <div style="height:40px"></div>
+</aside>
+
+<!-- ================= DOKUMENTTI ================= -->
+<main class="stage"><article class="doc" id="doc"></article></main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const MARK = '<svg viewBox="0 0 40 40"><rect width="40" height="40" rx="9" fill="#14130f"/><circle cx="14" cy="14" r="4" fill="#ff4d1a"/><circle cx="26" cy="14" r="4" fill="#ff4d1a"/><rect x="9" y="24" width="22" height="5" rx="2.5" fill="#f4f1ea"/></svg>';
+
+// Pohjat: nimet sivuston Yhteistyö-osiosta. Hinnat ja kuvaukset täytetään kauppakohtaisesti.
+const PRESETS = [
+  {name:"Viestiaudit", type:"once", unit:"kpl"},
+  {name:"Positiointi ja myyntiviesti", type:"once", unit:"kpl"},
+  {name:"Verkkosivusto", type:"once", unit:"kpl"},
+  {name:"Hosting ja ylläpito", type:"monthly", unit:"kk"},
+  {name:"Kumppanuus", type:"monthly", unit:"kk"},
+  {name:"Lisätyö", type:"once", unit:"h"},
+];
+
+const SENDER_DEFAULT = {company:"Äijä Group Oy", ytunnus:"", contact:"Sulo Mäki", email:"sulo@aijagroup.fi", phone:"", address:"", web:"aijagroup.fi", iban:""};
+
+const today = () => new Date().toISOString().slice(0,10);
+function nextNumber(){
+  let n = 1; try{ n = parseInt(localStorage.getItem("ag_tv_seq")||"0",10)+1 }catch(e){}
+  return "AG-" + new Date().getFullYear() + "-" + String(n).padStart(3,"0");
+}
+function bumpSeq(){ try{ const m=(state.o.number||"").match(/(\d+)$/); if(m){ const cur=parseInt(localStorage.getItem("ag_tv_seq")||"0",10); localStorage.setItem("ag_tv_seq", Math.max(cur, parseInt(m[1],10))) } }catch(e){} }
+
+function blankOrder(sender){
+  return {
+    s: sender || {...SENDER_DEFAULT},
+    c: {company:"", ytunnus:"", contact:"", email:"", phone:"", address:"", einvoice:""},
+    o: {number: nextNumber(), date: today(), ref:"", vat:25.5, priceMode:"net",
+        intro:"Kiitos tilauksestanne. Vahvistamme tällä tilauksen alla olevan sisällön mukaisesti."},
+    rows: [{name:"", desc:"", qty:1, unit:"kpl", price:"", type:"once"}],
+    t: {start:"", delivery:"", billing:"", payment:"14 päivää netto", term:"", needs:"",
+        notes:"Pyydämme tarkistamaan tilauksen tiedot. Jos jokin ei vastaa sovittua, ilmoitattehan meille mahdollisimman pian.", sign:false}
+  };
+}
+
+let state;
+try{ state = JSON.parse(localStorage.getItem("ag_tv_current")||"null") }catch(e){ state=null }
+if(!state) state = blankOrder(loadSender());
+function loadSender(){ try{ const s=JSON.parse(localStorage.getItem("ag_tv_sender")||"null"); if(s) return {...SENDER_DEFAULT,...s} }catch(e){} return {...SENDER_DEFAULT} }
+
+// ---------- apurit ----------
+const $ = s => document.querySelector(s);
+const esc = s => String(s??"").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const num = v => { const n = parseFloat(String(v).replace(/\s/g,"").replace(",", ".")); return isFinite(n)?n:0 };
+const eur = n => n.toLocaleString("fi-FI",{minimumFractionDigits:2,maximumFractionDigits:2}) + " €";
+const pct = n => n.toLocaleString("fi-FI",{maximumFractionDigits:2}) + " %";
+const fiDate = iso => { if(!iso) return ""; const [y,m,d]=iso.split("-"); return `${+d}.${+m}.${y}` };
+const get = (path) => path.split(".").reduce((o,k)=>o?.[k], state);
+const set = (path,val) => { const ks=path.split("."); let o=state; ks.slice(0,-1).forEach(k=>o=o[k]); o[ks.at(-1)]=val };
+
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("show"),2200) }
+
+let saveT;
+function save(){
+  $("#saved").textContent="Tallennetaan…";
+  clearTimeout(saveT);
+  saveT=setTimeout(()=>{
+    try{ localStorage.setItem("ag_tv_current", JSON.stringify(state)); localStorage.setItem("ag_tv_sender", JSON.stringify(state.s)); $("#saved").textContent="Tallennettu" }
+    catch(e){ $("#saved").textContent="Ei tallennusta" }
+  },300);
+}
+
+// ---------- laskenta ----------
+function calc(){
+  const vat = num(state.o.vat)/100, gross = state.o.priceMode==="gross";
+  const out = {once:{net:0,vat:0,gross:0,rows:[]}, monthly:{net:0,vat:0,gross:0,rows:[]}};
+  state.rows.forEach((r,i)=>{
+    if(!r.name && !r.price) return;
+    const unitIn = num(r.price), qty = num(r.qty)||0;
+    const unitNet = gross ? unitIn/(1+vat) : unitIn;
+    const lineNet = unitNet*qty;
+    const g = out[r.type==="monthly"?"monthly":"once"];
+    g.rows.push({...r, i, unitNet, lineNet});
+    g.net += lineNet;
+  });
+  for(const g of [out.once,out.monthly]){ g.net=Math.round(g.net*100)/100; g.vat=Math.round(g.net*vat*100)/100; g.gross=g.net+g.vat }
+  return out;
+}
+
+// ---------- rivieditori ----------
+function renderRows(){
+  const wrap=$("#rows"); wrap.innerHTML="";
+  state.rows.forEach((r,i)=>{
+    const d=document.createElement("div"); d.className="row-card";
+    d.innerHTML=`
+      <div class="top"><span class="n">${i+1}</span>
+        <input data-r="name" placeholder="Tuote / palvelu" value="${esc(r.name)}">
+        <div class="icons">
+          <button class="icon" data-act="up" title="Siirrä ylös">↑</button>
+          <button class="icon" data-act="down" title="Siirrä alas">↓</button>
+          <button class="icon" data-act="del" title="Poista">×</button>
+        </div></div>
+      <textarea data-r="desc" rows="2" placeholder="Mitä sisältyy (näkyy dokumentissa)">${esc(r.desc)}</textarea>
+      <div class="g4">
+        <div><label>Määrä</label><input data-r="qty" inputmode="decimal" value="${esc(r.qty)}"></div>
+        <div><label>Yksikkö</label><input data-r="unit" value="${esc(r.unit)}"></div>
+        <div><label>À-hinta €</label><input data-r="price" inputmode="decimal" placeholder="0,00" value="${esc(r.price)}"></div>
+        <div><label>Veloitus</label><select data-r="type">
+          <option value="once"${r.type!=="monthly"?" selected":""}>Kertaluonteinen</option>
+          <option value="monthly"${r.type==="monthly"?" selected":""}>Kuukausittain</option></select></div>
+      </div>`;
+    d.addEventListener("input",e=>{ const k=e.target.dataset.r; if(!k) return; state.rows[i][k]=e.target.value; update() });
+    d.addEventListener("change",e=>{ if(e.target.dataset.r==="type"){ state.rows[i].type=e.target.value; update() } });
+    d.querySelectorAll("[data-act]").forEach(b=>b.onclick=()=>{
+      const a=b.dataset.act;
+      if(a==="del"){ state.rows.splice(i,1); if(!state.rows.length) state.rows.push({name:"",desc:"",qty:1,unit:"kpl",price:"",type:"once"}) }
+      if(a==="up" && i>0) [state.rows[i-1],state.rows[i]]=[state.rows[i],state.rows[i-1]];
+      if(a==="down" && i<state.rows.length-1) [state.rows[i+1],state.rows[i]]=[state.rows[i],state.rows[i+1]];
+      renderRows(); update();
+    });
+    wrap.appendChild(d);
+  });
+}
+function addRow(p){
+  const r={name:p?.name||"",desc:"",qty:1,unit:p?.unit||"kpl",price:"",type:p?.type||"once"};
+  const last=state.rows.at(-1);
+  if(last && !last.name && !last.price && !last.desc) state.rows[state.rows.length-1]=r; else state.rows.push(r);
+  renderRows(); update();
+  const inputs=document.querySelectorAll('#rows [data-r="price"]'); inputs[inputs.length-1]?.focus();
+}
+
+// ---------- dokumentti ----------
+function renderDoc(){
+  const s=state.s, c=state.c, o=state.o, t=state.t, k=calc();
+  const E = (v,ph) => v ? esc(v) : `<span class="empty">${ph}</span>`;
+  const vatP = pct(num(o.vat));
+  const gross = o.priceMode==="gross";
+
+  const rowHtml = (g) => g.rows.map(r=>`
+    <tr><td><div class="item-name">${E(r.name,"Tuote / palvelu")}</div>${r.desc?`<div class="desc">${esc(r.desc)}</div>`:""}</td>
+    <td class="num">${esc(String(r.qty).replace(".",","))} ${esc(r.unit)}</td>
+    <td class="num">${eur(r.unitNet)}</td>
+    <td class="num">${eur(r.lineNet)}</td></tr>`).join("");
+  const both = k.once.rows.length && k.monthly.rows.length;
+  let body = "";
+  if(k.once.rows.length) body += (both?`<tr class="group"><td colspan="4">Kertaluonteiset</td></tr>`:"") + rowHtml(k.once);
+  if(k.monthly.rows.length) body += `<tr class="group"><td colspan="4">Kuukausittain</td></tr>` + rowHtml(k.monthly);
+  if(!body) body = `<tr><td colspan="4"><span class="empty">Lisää tilausrivit vasemmalta</span></td></tr>`;
+
+  const totBox = (g,title,suffix) => `
+    <div class="tot"><h4>${title}</h4>
+      <div class="l"><span>Yhteensä alv 0 %</span><span>${eur(g.net)}${suffix}</span></div>
+      <div class="l"><span>Arvonlisävero ${vatP}</span><span>${eur(g.vat)}${suffix}</span></div>
+      <div class="l sum"><span>Yhteensä</span><span>${eur(g.gross)}${suffix}</span></div></div>`;
+  let totals = "";
+  if(k.once.rows.length) totals += totBox(k.once, k.monthly.rows.length?"Kertaluonteiset":"Yhteenveto","");
+  if(k.monthly.rows.length) totals += totBox(k.monthly,"Kuukausittain"," / kk");
+
+  const terms = [["Työn aloitus",t.start],["Arvioitu valmistuminen",t.delivery],["Laskutus",t.billing],["Maksuehto",t.payment],
+                 ...(k.monthly.rows.length?[["Sopimuskausi",t.term]]:[]),["Asiakkaalta tarvitaan",t.needs]].filter(x=>x[1]);
+
+  const cust = [c.contact, c.address, c.ytunnus&&("Y-tunnus "+c.ytunnus), c.email, c.phone, c.einvoice&&("Verkkolasku: "+c.einvoice)].filter(Boolean).map(esc).join("\n");
+  const send = [s.contact, s.address, s.email, s.phone].filter(Boolean).map(esc).join("\n");
+  const [w1,w2] = (s.company||"").replace(/\s+Oy$/i,"").toUpperCase().split(/\s+(.+)/);
+
+  $("#doc").innerHTML = `
+    <div class="d-head">
+      <div class="brand">${MARK}<div class="word">${esc(w1||"")}<small>${esc(w2||"")}</small></div></div>
+      <div class="d-title"><h1>Tilausvahvistus</h1>
+        <dl class="meta"><dt>Numero</dt><dd>${E(o.number,"—")}</dd><dt>Päiväys</dt><dd>${E(fiDate(o.date),"—")}</dd>${o.ref?`<dt>Viite</dt><dd>${esc(o.ref)}</dd>`:""}</dl></div>
+    </div>
+    <div class="bar"></div>
+    <div class="parties">
+      <div class="party"><h3>Tilaaja</h3><p class="name">${E(c.company,"Asiakkaan yritys")}</p><p>${cust}</p></div>
+      <div class="party"><h3>Toimittaja</h3><p class="name">${E(s.company,"Yritys")}</p><p>${send}</p></div>
+    </div>
+    ${o.intro?`<p class="intro">${esc(o.intro)}</p>`:""}
+    <table class="items"><thead><tr><th>Tuote / palvelu</th><th class="num">Määrä</th><th class="num">À-hinta alv 0 %</th><th class="num">Yhteensä alv 0 %</th></tr></thead>
+      <tbody>${body}</tbody></table>
+    ${totals?`<div class="totals">${totals}</div>`:""}
+    ${terms.length?`<div class="d-sec"><h3>Ehdot ja aikataulu</h3><dl class="terms">${terms.map(([a,b])=>`<dt>${a}</dt><dd>${esc(b)}</dd>`).join("")}</dl></div>`:""}
+    ${t.notes?`<div class="d-sec"><h3>Lisätiedot</h3><p>${esc(t.notes)}</p></div>`:""}
+    ${t.sign?`<div class="sign"><div class="line">Tilaaja – päiväys, allekirjoitus ja nimenselvennys</div><div class="line">${esc(s.company)} – päiväys ja allekirjoitus</div></div>`:""}
+    <footer class="d-foot"><b>${esc(s.company)}</b>${s.ytunnus?`<span>Y-tunnus ${esc(s.ytunnus)}</span>`:""}${s.web?`<span>${esc(s.web)}</span>`:""}${s.email?`<span>${esc(s.email)}</span>`:""}${s.phone?`<span>${esc(s.phone)}</span>`:""}${s.iban?`<span>IBAN ${esc(s.iban)}</span>`:""}</footer>`;
+
+  document.title = ["Tilausvahvistus", o.number, c.company].filter(Boolean).join(" ");
+  const n = k.once.rows.length + k.monthly.rows.length;
+  $("#rowsum").textContent = n ? `${n} riviä · ${eur(k.once.gross)}${k.monthly.rows.length?` + ${eur(k.monthly.gross)}/kk`:""} sis. alv` : "";
+}
+
+function update(){ renderDoc(); save() }
+
+// ---------- kentät ----------
+function bindFields(){
+  document.querySelectorAll("[data-k]").forEach(el=>{
+    const v=get(el.dataset.k);
+    if(el.type==="checkbox") el.checked=!!v; else el.value = v ?? "";
+    el.oninput = el.onchange = ()=>{ set(el.dataset.k, el.type==="checkbox"?el.checked:el.value); update() };
+  });
+}
+
+// ---------- sähköposti ----------
+function mailText(){
+  const s=state.s,c=state.c,o=state.o,k=calc();
+  const lines = [];
+  lines.push(c.contact?`Hei ${c.contact.split(" ")[0]},`:"Hei,","");
+  lines.push(`kiitos tilauksestanne! Liitteenä tilausvahvistus ${o.number} (${fiDate(o.date)}).`,"");
+  lines.push("Tilaus lyhyesti:");
+  [...k.once.rows,...k.monthly.rows].forEach(r=>lines.push(`– ${r.name||"Tuote / palvelu"}: ${eur(r.lineNet)}${r.type==="monthly"?" / kk":""} alv 0 %`));
+  lines.push("");
+  if(k.once.rows.length) lines.push(`Kertaluonteiset yhteensä ${eur(k.once.net)} alv 0 % (${eur(k.once.gross)} sis. alv ${pct(num(o.vat))})`);
+  if(k.monthly.rows.length) lines.push(`Kuukausittain ${eur(k.monthly.net)} alv 0 % (${eur(k.monthly.gross)} sis. alv)`);
+  if(state.t.start) lines.push(`Työn aloitus: ${state.t.start}`);
+  lines.push("","Pyydämme tarkistamaan tiedot. Jos jokin ei vastaa sovittua, vastaattehan tähän viestiin.","","Ystävällisin terveisin,",s.contact||"",s.company||"",[s.phone,s.email].filter(Boolean).join(" · "));
+  return lines.join("\n");
+}
+function mailSubject(){ return `Tilausvahvistus ${state.o.number}${state.c.company?" – "+state.c.company:""}` }
+
+// ---------- Google Docs -kopio ----------
+// Docs ymmärtää vain taulukot ja inline-tyylit (ei flex/grid/SVG), joten dokumentti kootaan erikseen niillä.
+// Logo haetaan julkisesta osoitteesta, koska Docs lataa liitetyt kuvat verkosta.
+const LOGO_URL = "https://aijagroup.fi/img/logo.png";
+function docsHtml(){
+  const s=state.s,c=state.c,o=state.o,t=state.t,k=calc(), vatP=pct(num(o.vat));
+  const F = "font-family:Inter,Arial,sans-serif;color:#14130f;";
+  const MUTED = "color:#6b675d;";
+  const cap = txt => `<p style="${F}${MUTED}font-size:8pt;font-weight:bold;letter-spacing:1px;margin:0 0 4pt">${txt.toUpperCase()}</p>`;
+  const br = v => esc(v).replace(/\n/g,"<br>");
+  const NB = "border:none;";
+  const td = (content, extra="") => `<td style="${NB}${F}font-size:10pt;vertical-align:top;padding:4pt 6pt;${extra}">${content}</td>`;
+
+  const cust = [c.contact, c.address, c.ytunnus&&("Y-tunnus "+c.ytunnus), c.email, c.phone, c.einvoice&&("Verkkolasku: "+c.einvoice)].filter(Boolean).map(br).join("<br>");
+  const send = [s.contact, s.address, s.email, s.phone].filter(Boolean).map(br).join("<br>");
+
+  const head = `<table style="border-collapse:collapse;width:100%;${NB}"><tr>
+    ${td(`<img src="${LOGO_URL}" width="44" height="44" alt="${esc(s.company)}">`, "width:52pt")}
+    ${td(`<span style="font-family:'Bricolage Grotesque',Arial,sans-serif;font-size:18pt;font-weight:800">${esc((s.company||"").replace(/\s+Oy$/i,"").toUpperCase())}</span>`)}
+    ${td(`<span style="font-family:'Bricolage Grotesque',Arial,sans-serif;font-size:20pt;font-weight:800">Tilausvahvistus</span><br>
+      <span style="${MUTED}">Numero</span> <b>${esc(o.number)}</b><br><span style="${MUTED}">Päiväys</span> <b>${esc(fiDate(o.date))}</b>${o.ref?`<br><span style="${MUTED}">Viite</span> <b>${esc(o.ref)}</b>`:""}`, "text-align:right")}
+  </tr></table>
+  <hr style="border:none;border-top:3px solid #ff4d1a;margin:8pt 0 12pt">`;
+
+  const parties = `<table style="border-collapse:collapse;width:100%;${NB}"><tr>
+    ${td(cap("Tilaaja")+`<b style="font-size:11pt">${esc(c.company)}</b><br>${cust}`, "width:50%;padding-left:0")}
+    ${td(cap("Toimittaja")+`<b style="font-size:11pt">${esc(s.company)}</b><br>${send}`, "width:50%")}
+  </tr></table>`;
+
+  const B = "border:1px solid #dcd6c8;";
+  const th = (x,al="left") => `<td style="${B}${F}${MUTED}font-size:8pt;font-weight:bold;padding:5pt 6pt;background-color:#f4f1ea;text-align:${al}">${x.toUpperCase()}</td>`;
+  const cell = (x,al="left",extra="") => `<td style="${B}${F}font-size:10pt;padding:6pt;vertical-align:top;text-align:${al};${extra}">${x}</td>`;
+  const rowsOf = g => g.rows.map(r=>`<tr>${cell(`<b>${esc(r.name)}</b>${r.desc?`<br><span style="${MUTED}font-size:9pt">${br(r.desc)}</span>`:""}`)}
+    ${cell(`${esc(String(r.qty).replace(".",","))} ${esc(r.unit)}`,"right")}${cell(eur(r.unitNet),"right")}${cell(eur(r.lineNet),"right")}</tr>`).join("");
+  const groupRow = txt => `<tr><td colspan="4" style="${B}${F}color:#ff4d1a;font-size:8pt;font-weight:bold;padding:5pt 6pt">${txt.toUpperCase()}</td></tr>`;
+  const both = k.once.rows.length && k.monthly.rows.length;
+  const items = `<table style="border-collapse:collapse;width:100%;margin-top:10pt">
+    <tr>${th("Tuote / palvelu")}${th("Määrä","right")}${th("À-hinta alv 0 %","right")}${th("Yhteensä alv 0 %","right")}</tr>
+    ${k.once.rows.length?(both?groupRow("Kertaluonteiset"):"")+rowsOf(k.once):""}
+    ${k.monthly.rows.length?groupRow("Kuukausittain")+rowsOf(k.monthly):""}
+  </table>`;
+
+  const totRows = (g,title,suf) => `
+    <tr><td colspan="2" style="${NB}${F}${MUTED}font-size:8pt;font-weight:bold;padding:8pt 6pt 2pt">${title.toUpperCase()}</td></tr>
+    <tr>${td("Yhteensä alv 0 %")}${td(eur(g.net)+suf,"text-align:right")}</tr>
+    <tr>${td("Arvonlisävero "+vatP)}${td(eur(g.vat)+suf,"text-align:right")}</tr>
+    <tr>${td("<b>Yhteensä</b>","border-top:2px solid #14130f")}${td(`<b>${eur(g.gross)+suf}</b>`,"text-align:right;border-top:2px solid #14130f")}</tr>`;
+  const totals = (k.once.rows.length||k.monthly.rows.length) ? `<table style="border-collapse:collapse;width:60%;margin-left:auto;margin-top:6pt;${NB}">
+    ${k.once.rows.length?totRows(k.once,k.monthly.rows.length?"Kertaluonteiset":"Yhteenveto",""):""}
+    ${k.monthly.rows.length?totRows(k.monthly,"Kuukausittain"," / kk"):""}</table>` : "";
+
+  const terms = [["Työn aloitus",t.start],["Arvioitu valmistuminen",t.delivery],["Laskutus",t.billing],["Maksuehto",t.payment],
+                 ...(k.monthly.rows.length?[["Sopimuskausi",t.term]]:[]),["Asiakkaalta tarvitaan",t.needs]].filter(x=>x[1]);
+  const termsHtml = terms.length ? `<p style="margin:14pt 0 0"></p>${cap("Ehdot ja aikataulu")}<table style="border-collapse:collapse;width:100%;${NB}">
+    ${terms.map(([a,b])=>`<tr>${td(`<span style="${MUTED}">${a}</span>`,"width:34%;padding-left:0")}${td(br(b))}</tr>`).join("")}</table>` : "";
+
+  const p = (html,extra="") => `<p style="${F}font-size:10pt;margin:0 0 8pt;${extra}">${html}</p>`;
+  const sign = t.sign ? `<table style="border-collapse:collapse;width:100%;margin-top:30pt;${NB}"><tr>
+    ${td(`<span style="${MUTED}font-size:8.5pt">Tilaaja – päiväys, allekirjoitus ja nimenselvennys</span>`,"width:50%;border-top:1px solid #14130f;padding-left:0")}
+    ${td("","width:6%")}
+    ${td(`<span style="${MUTED}font-size:8.5pt">${esc(s.company)} – päiväys ja allekirjoitus</span>`,"width:44%;border-top:1px solid #14130f")}</tr></table>` : "";
+  const foot = [`<b>${esc(s.company)}</b>`, s.ytunnus&&"Y-tunnus "+esc(s.ytunnus), esc(s.web), esc(s.email), esc(s.phone), s.iban&&"IBAN "+esc(s.iban)].filter(Boolean).join(" · ");
+
+  return `<meta charset="utf-8"><div style="${F}">${head}${parties}
+    ${o.intro?p(br(o.intro),"margin-top:12pt"):""}${items}${totals}${termsHtml}
+    ${t.notes?`<p style="margin:12pt 0 0"></p>${cap("Lisätiedot")}${p(br(t.notes))}`:""}${sign}
+    <hr style="border:none;border-top:1px solid #dcd6c8;margin:22pt 0 6pt">${p(foot,MUTED+"font-size:8pt")}</div>`;
+}
+function docsPlain(){
+  const s=state.s,c=state.c,o=state.o,t=state.t,k=calc();
+  const L=[`TILAUSVAHVISTUS ${o.number} · ${fiDate(o.date)}`,"",`Tilaaja: ${c.company}`,[c.contact,c.address,c.ytunnus&&"Y-tunnus "+c.ytunnus,c.email,c.phone].filter(Boolean).join("\n"),"",`Toimittaja: ${s.company}`,"",o.intro,""];
+  [...k.once.rows,...k.monthly.rows].forEach(r=>L.push(`${r.name} – ${r.qty} ${r.unit} × ${eur(r.unitNet)} = ${eur(r.lineNet)}${r.type==="monthly"?" / kk":""} alv 0 %${r.desc?"\n  "+r.desc.replace(/\n/g,"\n  "):""}`));
+  L.push("");
+  if(k.once.rows.length) L.push(`Kertaluonteiset: ${eur(k.once.net)} alv 0 % + alv ${eur(k.once.vat)} = ${eur(k.once.gross)}`);
+  if(k.monthly.rows.length) L.push(`Kuukausittain: ${eur(k.monthly.net)} alv 0 % + alv ${eur(k.monthly.vat)} = ${eur(k.monthly.gross)} / kk`);
+  [["Työn aloitus",t.start],["Arvioitu valmistuminen",t.delivery],["Laskutus",t.billing],["Maksuehto",t.payment],["Sopimuskausi",k.monthly.rows.length&&t.term],["Asiakkaalta tarvitaan",t.needs]].forEach(([a,b])=>b&&L.push(`${a}: ${b}`));
+  if(t.notes) L.push("",t.notes);
+  return L.join("\n");
+}
+async function copyDocs(){
+  const html=docsHtml(), text=docsPlain();
+  try{
+    await navigator.clipboard.write([new ClipboardItem({"text/html":new Blob([html],{type:"text/html"}),"text/plain":new Blob([text],{type:"text/plain"})})]);
+  }catch(e){
+    // Varakeino selaimille, joissa ClipboardItem ei ole käytössä
+    const box=document.createElement("div"); box.innerHTML=html; box.style.cssText="position:fixed;left:-9999px;top:0";
+    document.body.appendChild(box); const r=document.createRange(); r.selectNodeContents(box);
+    const sel=getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    const ok=document.execCommand("copy"); sel.removeAllRanges(); box.remove();
+    if(!ok){ toast("Kopiointi ei onnistunut"); return }
+  }
+  bumpSeq();
+  toast("Kopioitu – liitä Google Docsiin (⌘V)");
+}
+
+// ---------- napit ----------
+$("#btnDocs").onclick=copyDocs;
+$("#btnPdf").onclick=()=>{ bumpSeq(); window.print() };
+$("#btnCopy").onclick=async()=>{ try{ await navigator.clipboard.writeText(mailText()); toast("Viesti kopioitu leikepöydälle") }catch(e){ toast("Kopiointi ei onnistunut") } };
+$("#btnMail").onclick=()=>{
+  if(!state.c.email) toast("Asiakkaan sähköposti puuttuu – viesti avautuu ilman vastaanottajaa");
+  bumpSeq();
+  location.href=`mailto:${encodeURIComponent(state.c.email||"")}?subject=${encodeURIComponent(mailSubject())}&body=${encodeURIComponent(mailText())}`;
+  setTimeout(()=>toast("Muista liittää PDF viestiin"),600);
+};
+$("#btnNew").onclick=()=>{
+  if(!confirm("Aloitetaanko uusi tilaus? Nykyinen tyhjennetään (vie se ensin luonnokseksi, jos haluat säilyttää).")) return;
+  bumpSeq(); state=blankOrder({...state.s}); bindFields(); renderRows(); update();
+};
+$("#btnExport").onclick=()=>{
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download=(document.title.replace(/[^\wäöåÄÖÅ\- ]+/g,"").trim()||"tilausvahvistus")+".json"; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+};
+$("#btnImport").onclick=()=>$("#fileImport").click();
+$("#fileImport").onchange=async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  try{ const d=JSON.parse(await f.text()); if(!d.rows||!d.c) throw 0; state={...blankOrder(state.s),...d}; bindFields(); renderRows(); update(); toast("Luonnos avattu") }
+  catch(err){ toast("Tiedostoa ei voitu lukea") }
+  e.target.value="";
+};
+$("#addRow").onclick=()=>addRow();
+$("#presets").innerHTML = PRESETS.map((p,i)=>`<button class="chip" data-p="${i}">+ ${esc(p.name)}${p.type==="monthly"?" /kk":""}</button>`).join("");
+$("#presets").onclick=e=>{ const i=e.target.dataset.p; if(i!=null) addRow(PRESETS[i]) };
+
+bindFields(); renderRows(); renderDoc();
+</script>
+</body>
+</html>
