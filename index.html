@@ -156,6 +156,9 @@ table.items{width:100%;border-collapse:collapse;font-size:9.5pt;margin-bottom:6p
       <div><label>Tilausnumero</label><input data-k="o.number" placeholder="#2"></div>
       <div><label>Päiväys</label><input data-k="o.date" type="date"></div>
       <div class="full"><label>Asiakkaan viite</label><input data-k="o.ref" placeholder="Valinnainen – tulee laskulle"></div>
+      <div><label>Domain</label><input data-k="o.domain" placeholder="esimerkki.fi" autocapitalize="none" spellcheck="false"></div>
+      <div><label>Aloituspalaveri</label><input data-k="o.kickoff" type="datetime-local"></div>
+      <div class="full"><label>Sivuston alasivut <small>pilkulla eroteltuna, Drive-kansiot</small></label><textarea data-k="o.pages" rows="2" placeholder="Etusivu, Palvelut, Referenssit, Yhteystiedot"></textarea></div>
       <div class="full"><label>Saateteksti dokumentissa</label><textarea data-k="o.intro" rows="2" placeholder="Kiitos verkkosivutilauksestasi!"></textarea></div>
     </div>
   </details>
@@ -180,7 +183,7 @@ table.items{width:100%;border-collapse:collapse;font-size:9.5pt;margin-bottom:6p
     <div class="sec grid">
       <div class="full"><label>Laskutus</label><textarea data-k="t.billing" rows="2" placeholder="Verkkosivu kertamaksulla, hosting 3 kk välein."></textarea></div>
       <div class="full"><label>Maksuehto</label><input data-k="t.payment" placeholder="7 vrk netto"></div>
-      <div class="full"><label>Lisätiedot</label><textarea data-k="t.notes" rows="3" placeholder="Vapaa sana"></textarea></div>
+      <div class="full"><label>Lisätiedot</label><textarea data-k="t.notes" rows="3" placeholder="Tyhjänä: julkaisu maksun ja siirtotietojen jälkeen, laskutus sovitaan aloituspalaverissa"></textarea></div>
       <label class="check full"><input type="checkbox" data-k="t.sign"> Näytä allekirjoituskohdat</label>
     </div>
   </details>
@@ -231,6 +234,10 @@ table.items{width:100%;border-collapse:collapse;font-size:9.5pt;margin-bottom:6p
   <textarea name="laskutus"></textarea>
   <textarea name="maksuehto"></textarea>
   <textarea name="lisatiedot"></textarea>
+  <textarea name="domain"></textarea>
+  <textarea name="aloituspalaveri"></textarea>
+  <textarea name="alasivut"></textarea>
+  <textarea name="myyja"></textarea>
 </form>
 
 <script>
@@ -255,6 +262,9 @@ function nextNumber(){
 }
 // Harmaat esimerkkitekstit, joita käytetään dokumentissa, jos kenttä jätetään tyhjäksi
 const FALLBACK = {intro:"Kiitos verkkosivutilauksestasi!", billing:"Verkkosivu kertamaksulla, hosting 3 kk välein.", payment:"7 vrk netto"};
+// Lisätiedot-kentän vakioteksti, jos kenttä jätetään tyhjäksi (domain täydentyy)
+const cleanDomain = d => String(d||"").trim().toLowerCase().replace(/^https?:\/\//,"").replace(/^www\./,"").replace(/\/.*$/,"");
+const notesFallback = d => `Sivusto julkaistaan osoitteeseen ${cleanDomain(d)||"<domain>"}, kun lasku on maksettu ja siirtotiedot toimitettu. Laskutustapa sovitaan aloituspalaverissa ja lasku lähetetään erikseen.`;
 const DEFAULT_ROWS = () => [
   {name:"", desc:"", qty:1, unit:"kpl", price:"", type:"once", ph:{name:"Verkkosivusto – esimerkki.fi", desc:"Sivuston modernisointi, hintalaskuri, asennus NordicHostiin"}},
   {name:"", desc:"", qty:1, unit:"kk", price:"", type:"monthly", ph:{name:"Hosting ja ylläpito", desc:"NordicHost.fi – Suomen tehokkainta hostingia"}},
@@ -266,7 +276,7 @@ function blankOrder(sender){
     s: sender || {...SENDER_DEFAULT},
     c: {company:"", ytunnus:"", contact:"", email:"", phone:"", address:"", einvoice:""},
     v: 2,
-    o: {number: nextNumber(), date: today(), ref:"", vat:25.5, priceMode:"net", intro:""},
+    o: {number: nextNumber(), date: today(), ref:"", vat:25.5, priceMode:"net", intro:"", domain:"", kickoff:"", pages:""},
     rows: DEFAULT_ROWS(),
     t: {billing:"", payment:"", notes:"", sign:false}
   };
@@ -286,6 +296,8 @@ if(state && !state.v){
   if(state.rows.length===1 && !state.rows[0].name && !state.rows[0].price && !state.rows[0].desc) state.rows=DEFAULT_ROWS();
   state.v=2;
 }
+// v2 → uudet kentät (domain, aloituspalaveri, alasivut) vanhoihin tallennuksiin
+if(state && state.o) for(const k of ["domain","kickoff","pages"]) if(state.o[k]==null) state.o[k]="";
 function loadSender(){ try{ const s=JSON.parse(localStorage.getItem("ag_tv_sender")||"null"); if(s) return {...SENDER_DEFAULT,...s} }catch(e){} return {...SENDER_DEFAULT} }
 
 // ---------- apurit ----------
@@ -295,6 +307,8 @@ const num = v => { const n = parseFloat(String(v).replace(/\s/g,"").replace(",",
 const eur = n => n.toLocaleString("fi-FI",{minimumFractionDigits:2,maximumFractionDigits:2}) + " €";
 const pct = n => n.toLocaleString("fi-FI",{maximumFractionDigits:2}) + " %";
 const fiDate = iso => { if(!iso) return ""; const [y,m,d]=iso.split("-"); return `${+d}.${+m}.${y}` };
+const WD = ["su","ma","ti","ke","to","pe","la"];
+const fiDateTime = v => { if(!v) return ""; const d=new Date(v); if(isNaN(d)) return v; return `${WD[d.getDay()]} ${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()} klo ${String(d.getHours()).padStart(2,"0")}.${String(d.getMinutes()).padStart(2,"0")}` };
 const get = (path) => path.split(".").reduce((o,k)=>o?.[k], state);
 const set = (path,val) => { const ks=path.split("."); let o=state; ks.slice(0,-1).forEach(k=>o=o[k]); o[ks.at(-1)]=val };
 
@@ -406,7 +420,7 @@ function renderDoc(){
     <div class="d-head">
       <div class="brand">${MARK}<div class="word">${esc(w1||"")}<small>${esc(w2||"")}</small></div></div>
       <div class="d-title"><h1>Tilausvahvistus</h1>
-        <dl class="meta"><dt>Numero</dt><dd>${E(o.number,"—")}</dd><dt>Päiväys</dt><dd>${E(fiDate(o.date),"—")}</dd>${o.ref?`<dt>Viite</dt><dd>${esc(o.ref)}</dd>`:""}</dl></div>
+        <dl class="meta"><dt>Numero</dt><dd>${E(o.number,"—")}</dd><dt>Päiväys</dt><dd>${E(fiDate(o.date),"—")}</dd>${o.ref?`<dt>Viite</dt><dd>${esc(o.ref)}</dd>`:""}${o.domain?`<dt>Sivusto</dt><dd>${esc(cleanDomain(o.domain))}</dd>`:""}${o.kickoff?`<dt>Aloituspalaveri</dt><dd>${esc(fiDateTime(o.kickoff))}</dd>`:""}</dl></div>
     </div>
     <div class="bar"></div>
     <div class="parties">
@@ -418,7 +432,7 @@ function renderDoc(){
       <tbody>${body}</tbody></table>
     ${totals?`<div class="totals">${totals}</div>`:""}
     ${terms.length?`<div class="d-sec"><h3>Ehdot</h3><dl class="terms">${terms.map(([a,b])=>`<dt>${a}</dt><dd>${esc(b)}</dd>`).join("")}</dl></div>`:""}
-    ${t.notes?`<div class="d-sec"><h3>Lisätiedot</h3><p>${esc(t.notes)}</p></div>`:""}
+    <div class="d-sec"><h3>Lisätiedot</h3><p>${esc(t.notes||notesFallback(o.domain))}</p></div>
     ${t.sign?`<div class="sign"><div class="line">Tilaaja – päiväys, allekirjoitus ja nimenselvennys</div><div class="line">${esc(s.company)} – päiväys ja allekirjoitus</div></div>`:""}
     <footer class="d-foot"><b>${esc(s.company)}</b>${s.ytunnus?`<span>Y-tunnus ${esc(s.ytunnus)}</span>`:""}${s.web?`<span>${esc(s.web)}</span>`:""}${s.email?`<span>${esc(s.email)}</span>`:""}${s.phone?`<span>${esc(s.phone)}</span>`:""}${s.iban?`<span>IBAN ${esc(s.iban)}</span>`:""}</footer>`;
 
@@ -453,7 +467,7 @@ window.addEventListener("afterprint",()=>{
 
 // ---------- Lähetä Sulolle (Netlify Forms → sähköposti-ilmoitus laskutukseen) ----------
 function sendFields(){
-  const c=state.c,o=state.o,t=state.t,k=calc(),vatP=pct(num(o.vat));
+  const c=state.c,o=state.o,t=state.t,s=state.s,k=calc(),vatP=pct(num(o.vat));
   const rows=[...k.once.rows,...k.monthly.rows].map(r=>
     `${r.name||"Tuote / palvelu"}: ${String(r.qty).replace(".",",")} ${r.unit} × ${eur(r.unitNet)} = ${eur(r.lineNet)} alv 0 %${r.type==="monthly"?" / kk":""}${r.desc?"\n   "+r.desc.replace(/\n/g,"\n   "):""}`).join("\n");
   const sum=g=>`${eur(g.net)} alv 0 % + alv ${vatP} ${eur(g.vat)} = ${eur(g.gross)}`;
@@ -462,7 +476,9 @@ function sendFields(){
     asiakas:c.company, ytunnus:c.ytunnus, yhteyshenkilo:c.contact, sahkoposti:c.email, puhelin:c.phone,
     laskutusosoite:c.address, verkkolasku:c.einvoice, tilausrivit:rows,
     kertaluonteiset:k.once.rows.length?sum(k.once):"", kuukausittain:k.monthly.rows.length?sum(k.monthly)+" / kk":"",
-    laskutus:t.billing||FALLBACK.billing, maksuehto:t.payment||FALLBACK.payment, lisatiedot:t.notes
+    laskutus:t.billing||FALLBACK.billing, maksuehto:t.payment||FALLBACK.payment, lisatiedot:t.notes||notesFallback(o.domain),
+    domain:cleanDomain(o.domain),
+    aloituspalaveri:o.kickoff, alasivut:o.pages, myyja:s.contact
   };
 }
 let sending=false;
@@ -471,6 +487,9 @@ $("#btnSend").onclick=async()=>{
   const k=calc();
   if(!state.c.company){ toast("Asiakkaan yritys puuttuu"); return }
   if(!k.once.rows.length && !k.monthly.rows.length){ toast("Tilausrivit puuttuvat"); return }
+  if(!state.o.domain){ toast("Domain puuttuu"); return }
+  if(!state.o.kickoff){ toast("Aloituspalaverin aika puuttuu"); return }
+  if(!state.c.email){ toast("Asiakkaan sähköposti puuttuu"); return }
   if(!confirm(`Lähetetäänkö tilaus ${state.o.number} (${state.c.company}) Sulolle laskutukseen?`)) return;
   sending=true; const b=$("#btnSend"); b.textContent="Lähetetään…"; b.disabled=true;
   try{
