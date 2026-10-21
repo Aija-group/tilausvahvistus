@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Siirtotiedot – Äijä Group</title>
+<style>
+  :root{--ink:#14130f;--muted:#6b6962;--line:#e4e1d8;--bg:#f7f5ef;--accent:#ff4d1a}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+  main{max-width:720px;margin:0 auto;padding:40px 16px 80px}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+  header svg{width:36px;height:36px}
+  h1{font-size:28px;margin:0 0 8px}
+  .lead{color:var(--muted);margin:0 0 28px}
+  form{background:#fff;border:1px solid var(--line);border-radius:14px;padding:24px}
+  fieldset{border:0;padding:0;margin:0 0 28px}
+  legend{font-weight:600;font-size:17px;margin-bottom:4px}
+  .hint{color:var(--muted);font-size:14px;margin:0 0 14px}
+  label{display:block;font-size:14px;font-weight:600;margin:14px 0 6px}
+  label small{font-weight:400;color:var(--muted)}
+  input,select,textarea{width:100%;font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#fff}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+  @media (max-width:560px){.row{grid-template-columns:1fr}}
+  button{font:inherit;font-weight:600;background:var(--accent);color:#fff;border:0;border-radius:999px;padding:14px 28px;cursor:pointer}
+  .note{background:var(--bg);border-radius:8px;padding:12px 14px;font-size:14px;color:var(--muted);margin-top:8px}
+  .hp{position:absolute;left:-9999px}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <svg viewBox="0 0 40 40"><rect width="40" height="40" rx="9" fill="#14130f"/><circle cx="14" cy="14" r="4" fill="#ff4d1a"/><circle cx="26" cy="14" r="4" fill="#ff4d1a"/><rect x="9" y="24" width="22" height="5" rx="2.5" fill="#f4f1ea"/></svg>
+    <b>Äijä Group</b>
+  </header>
+  <h1>Siirtotiedot uutta sivustoa varten</h1>
+  <p class="lead">Nämä tiedot tarvitaan, jotta uusi sivusto saadaan omaan osoitteeseenne ja sähköposti toimii koko ajan. Vastaa sen verran kuin tiedät, loput käydään läpi aloituspalaverissa. <b>Älä kirjoita salasanoja tähän lomakkeeseen.</b></p>
+
+  <form name="siirtotiedot" method="POST" action="/siirtotiedot/kiitos.html" data-netlify="true" netlify-honeypot="bot-field">
+    <input type="hidden" name="form-name" value="siirtotiedot">
+    <p class="hp"><label>Älä täytä: <input name="bot-field"></label></p>
+
+    <fieldset>
+      <legend>Perustiedot</legend>
+      <div class="row">
+        <div><label>Yritys</label><input name="yritys" required></div>
+        <div><label>Verkko-osoite <small>esim. esimerkki.fi</small></label><input name="domain" required autocapitalize="none"></div>
+        <div><label>Yhteyshenkilö</label><input name="yhteyshenkilo" required></div>
+        <div><label>Sähköposti</label><input name="sahkoposti" type="email" required></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Verkko-osoite (domain)</legend>
+      <p class="hint">Osoite siirretään teidän nimiinne NordicHostille. Siirtoon tarvitaan välittäjänvaihtoavain (.fi) tai auth-koodi (.com). Avain syötetään NordicHostin tilauksessa, sitä ei lähetetä meille.</p>
+      <label>Missä osoite on nyt rekisteröity? <small>esim. Domainkeskus, Louhi, Fonecta, Zoner, en tiedä</small></label>
+      <input name="valittaja">
+      <label>Välittäjänvaihtoavain</label>
+      <select name="avain">
+        <option value="">Valitse</option>
+        <option>Haen avaimen itse (.fi: Traficomin Domainhaku, muut: välittäjän paneeli)</option>
+        <option>Tarvitsen apua avaimen hakemiseen</option>
+        <option>Nykyinen toimittaja hoitaa osoitetta, pyydän avaimen häneltä</option>
+        <option>En tiedä</option>
+      </select>
+      <label>Missä DNS-asetuksia hallitaan? <small>webhotelli, välittäjä, Cloudflare, mainostoimisto, en tiedä</small></label>
+      <input name="dns">
+    </fieldset>
+
+    <fieldset>
+      <legend>Sähköposti</legend>
+      <p class="hint">Tärkein kysymys. Sähköposti ei saa katketa siirrossa, joten meidän pitää tietää missä se on.</p>
+      <label>Missä yrityksen sähköposti on?</label>
+      <select name="posti">
+        <option value="">Valitse</option>
+        <option>Samassa webhotellissa kuin nykyinen sivu (webmail)</option>
+        <option>Google Workspace (Gmail)</option>
+        <option>Microsoft 365 (Outlook)</option>
+        <option>Muualla</option>
+        <option>Osoitteella ei ole sähköpostia (käytämme esim. gmail.com)</option>
+        <option>En tiedä</option>
+      </select>
+      <div class="row">
+        <div><label>Postilaatikoita <small>kpl</small></label><input name="postilaatikot" type="number" min="0"></div>
+        <div><label>Tarkennus <small>jos "muualla"</small></label><input name="posti_muu"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Nykyinen sivu ja toimittaja</legend>
+      <div class="row">
+        <div><label>Nykyinen webhotelli / palvelu <small>esim. Hostingpalvelu, Zoner, Wix, Kotisivukone</small></label><input name="webhotelli"></div>
+        <div><label>Kuka hoitaa nykyisiä sivuja?</label><input name="sivutoimittaja"></div>
+        <div><label>Sopimuksen irtisanomisaika <small>jos tiedossa</small></label><input name="irtisanomisaika"></div>
+        <div><label>Mitä nykyisiltä sivuilta pitää säilyttää?</label><input name="sailytettava"></div>
+      </div>
+      <div class="note">Nykyistä palvelua ei irtisanota ennen kuin uusi sivu on julkaistu ja todettu toimivaksi. Paneelitunnukset annetaan puhelimessa, ei tässä.</div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Google ja seuranta</legend>
+      <label>Google-yritysprofiili, Analytics, Search Console, Google Ads: mitkä ovat käytössä ja kuka hallitsee? <small>yrityksen oma tili, mainostoimisto, ei tiedossa</small></label>
+      <textarea name="google" rows="3"></textarea>
+    </fieldset>
+
+    <fieldset>
+      <legend>Uuden sivun yhteydenotot</legend>
+      <div class="row">
+        <div><label>Lomakkeen viestit osoitteeseen</label><input name="lomake_email" type="email"></div>
+        <div><label>Puhelinnumero sivulle</label><input name="lomake_puhelin"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>NordicHost-tili</legend>
+      <p class="hint">Hosting ja osoite tulevat teidän omalle tilillenne suomalaiselle NordicHostille. Tilaus tulee linkkinä, jonka maksatte itse.</p>
+      <div class="row">
+        <div><label>Tilin sähköposti</label><input name="nh_email" type="email"></div>
+        <div><label>Tilin puhelinnumero</label><input name="nh_puhelin"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Muuta</legend>
+      <textarea name="lisatiedot" rows="3" placeholder="Kysymyksiä, toiveita, aikatauluasioita"></textarea>
+    </fieldset>
+
+    <button type="submit">Lähetä tiedot</button>
+  </form>
+</main>
+<script>
+  // Esitäyttö linkistä: ?domain=&yritys=&email=&nimi=
+  const q = new URLSearchParams(location.search);
+  const pre = {domain:'domain', yritys:'yritys', email:'sahkoposti', nimi:'yhteyshenkilo'};
+  for (const k in pre) { const v = q.get(k); if (v) { const el = document.querySelector(`[name="${pre[k]}"]`); if (el && !el.value) el.value = v; } }
+</script>
+</body>
+</html>
