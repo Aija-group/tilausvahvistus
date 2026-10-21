@@ -513,6 +513,13 @@ $("#addRow").onclick=()=>addRow();
 $("#presets").innerHTML = PRESETS.map((p,i)=>`<button class="chip" data-p="${i}">+ ${esc(p.name)}${p.type==="monthly"?" /kk":""}</button>`).join("");
 $("#presets").onclick=e=>{ const i=e.target.dataset.p; if(i!=null) addRow(PRESETS[i]) };
 
+// Esitäyttö linkistä (Fluidin Tilausvahvistus-linkki): ?yritys=&ytunnus=&nimi=&email=&puhelin=&domain=&alasivut=
+(function(){
+  const q=new URLSearchParams(location.search); if(![...q.keys()].length) return;
+  const map={yritys:"c.company",ytunnus:"c.ytunnus",nimi:"c.contact",email:"c.email",puhelin:"c.phone",osoite:"c.address",domain:"o.domain",alasivut:"o.pages",viite:"o.ref"};
+  let n=0; for(const k in map){ const v=q.get(k); if(v){ set(map[k], k==="domain"?cleanDomain(v):v); n++; } }
+  if(n){ bindFields(); update(); history.replaceState(null,"",location.pathname); toast("Asiakkaan tiedot esitäytetty linkistä"); }
+})();
 bindFields(); renderRows(); renderDoc();
 </script>
 </body>
