@@ -21,6 +21,7 @@
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 12px}
   .grid .full{grid-column:1/-1}
   label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+  label small{font-weight:400;color:var(--accent)}
   input,select,textarea{width:100%;font:inherit;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:6px;padding:9px 10px;min-height:38px}
   textarea{resize:vertical;line-height:1.4}
   input:focus,select:focus,textarea:focus{outline:2px solid var(--focus);outline-offset:-1px;border-color:transparent}
@@ -104,7 +105,7 @@
     <h2>Asiakas</h2>
     <div class="grid">
       <div class="full"><label>Yritys</label><input data-k="c.company" placeholder="Esimerkki Oy"></div>
-      <div><label>Y-tunnus</label><input data-k="c.ytunnus" placeholder="1234567-8"></div>
+      <div><label>Y-tunnus <small id="ytjState"></small></label><input data-k="c.ytunnus" placeholder="1234567-8" inputmode="numeric" autocomplete="off"></div>
       <div><label>Yhteyshenkilö</label><input data-k="c.contact" placeholder="Matti Meikäläinen"></div>
       <div><label>Sähköposti</label><input data-k="c.email" type="email" autocapitalize="none"></div>
       <div><label>Puhelin</label><input data-k="c.phone"></div>
@@ -342,6 +343,38 @@ $("#btnClear").onclick=()=>{
   let n=0; for(const k in map){ const v=q.get(k); if(v){ set(map[k], k==="domain"?cleanDomain(v):v); n++ } }
   if(n){ history.replaceState(null,"",location.pathname); setTimeout(()=>toast("Asiakkaan tiedot esitäytetty linkistä"),300) }
 })();
+
+// ---------- YTJ-haku (PRH:n avoin rajapinta, sama data kuin Netvisorissa) ----------
+// Kun Y-tunnus on muotoa 1234567-8, haetaan nimi ja postiosoite ja täytetään tyhjät kentät.
+let ytjLast="";
+async function ytjLookup(){
+  const raw=(ytjEl.value||"").trim().replace(/\s/g,""), id=/^\d{7}-?\d$/.test(raw) ? raw.replace(/^(\d{7})(\d)$/,"$1-$2") : "";
+  const st=$("#ytjState");
+  if(!id || id===ytjLast) return;
+  ytjLast=id; st.textContent="haetaan…";
+  try{
+    const r=await fetch("https://avoindata.prh.fi/opendata-ytj-api/v3/companies?businessId="+encodeURIComponent(id));
+    const d=await r.json(); const c=(d.companies||[])[0];
+    if(!c){ st.textContent="ei löydy YTJ:stä"; return }
+    const name=(c.names||[]).find(n=>!n.endDate && n.type==="1")?.name || (c.names||[]).find(n=>!n.endDate)?.name || "";
+    const addr=(c.addresses||[]).find(a=>a.type===2) || (c.addresses||[])[0];
+    let line="";
+    if(addr){
+      const street=[addr.street, addr.buildingNumber, addr.entrance, addr.apartmentNumber].filter(Boolean).join(" ").replace(/\s+/g," ").trim();
+      const box=addr.postOfficeBox ? "PL "+addr.postOfficeBox : "";
+      const city=(addr.postOffices||[]).find(p=>p.languageCode==="1")?.city || (addr.postOffices||[])[0]?.city || "";
+      const cityCase=city ? city.charAt(0)+city.slice(1).toLowerCase() : "";
+      line=[addr.co?"c/o "+addr.co:"", street||box, [addr.postCode, cityCase].filter(Boolean).join(" ")].filter(Boolean).join("\n");
+    }
+    set("c.ytunnus", id);
+    if(name && !state.c.company) set("c.company", name);
+    if(line && !state.c.address) set("c.address", line);
+    bindFields(); update(); st.textContent=name ? "YTJ ✓" : ""; toast(name ? "Haettu YTJ:stä: "+name : "Y-tunnus löytyi, nimi puuttuu");
+  }catch(e){ st.textContent="haku ei onnistunut" }
+}
+const ytjEl=document.querySelector('[data-k="c.ytunnus"]');
+ytjEl.addEventListener("input", ()=>{ $("#ytjState").textContent=""; ytjLast=""; if(/^\d{7}-?\d$/.test(ytjEl.value.trim())) ytjLookup() });
+ytjEl.addEventListener("blur", ytjLookup);
 
 bindFields(); renderDoc();
 </script>
