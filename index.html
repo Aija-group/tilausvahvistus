@@ -322,11 +322,16 @@ $("#btnSend").onclick=async()=>{
   if(!confirm(`Viedäänkö tilaus ${state.o.number} (${state.c.company}) CRM:ään?`)) return;
   sending=true; const b=$("#btnSend"); b.textContent="Viedään…"; b.disabled=true;
   try{
-    const body=new URLSearchParams({"form-name":"tilausvahvistus","bot-field":"",...sendFields()});
-    const res=await fetch("/",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:body.toString()});
-    if(!res.ok) throw new Error(res.status);
-    bumpSeq(); toast("Viety CRM:ään ✓");
-  }catch(e){ toast("Vienti epäonnistui, yritä uudelleen") }
+    const f=sendFields();
+    // 1) Fluid CRM suoraan (Netlify-funktio, avain palvelimella)
+    const r=await fetch("/.netlify/functions/vie-crm",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(f)});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.ok) throw new Error(j.error||("HTTP "+r.status));
+    // 2) Netlify Forms (sähköposti-ilmoitus + putken webhook: Drive, kalenteri, taulukko)
+    const body=new URLSearchParams({"form-name":"tilausvahvistus","bot-field":"",...f});
+    await fetch("/",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:body.toString()}).catch(()=>{});
+    bumpSeq(); toast(j.updated ? "Päivitetty CRM:ssä ✓" : "Viety CRM:ään ✓");
+  }catch(e){ toast("Vienti epäonnistui: "+e.message) }
   finally{ sending=false; b.textContent="Vie CRM:ään"; b.disabled=false }
 };
 $("#btnClear").onclick=()=>{
