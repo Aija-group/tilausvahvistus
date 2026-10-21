@@ -146,7 +146,6 @@ table.items{width:100%;border-collapse:collapse;font-size:9.5pt;margin-bottom:6p
       <div><label>Sähköposti</label><input data-k="c.email" type="email"></div>
       <div><label>Puhelin</label><input data-k="c.phone"></div>
       <div class="full"><label>Laskutusosoite</label><textarea data-k="c.address" rows="2" placeholder="Katuosoite&#10;00100 Kaupunki"></textarea></div>
-      <div class="full"><label>Verkkolaskuosoite / välittäjä (valinnainen)</label><input data-k="c.einvoice"></div>
     </div>
   </details>
 
@@ -155,7 +154,6 @@ table.items{width:100%;border-collapse:collapse;font-size:9.5pt;margin-bottom:6p
     <div class="sec grid">
       <div><label>Tilausnumero</label><input data-k="o.number" placeholder="#2"></div>
       <div><label>Päiväys</label><input data-k="o.date" type="date"></div>
-      <div class="full"><label>Asiakkaan viite</label><input data-k="o.ref" placeholder="Valinnainen – tulee laskulle"></div>
       <div><label>Domain</label><input data-k="o.domain" placeholder="esimerkki.fi" autocapitalize="none" spellcheck="false"></div>
       <div><label>Aloituspalaveri</label><input data-k="o.kickoff" type="datetime-local"></div>
       <div class="full"><label>Sivuston alasivut <small>pilkulla eroteltuna, Drive-kansiot</small></label><textarea data-k="o.pages" rows="2" placeholder="Etusivu, Palvelut, Referenssit, Yhteystiedot"></textarea></div>
@@ -412,7 +410,7 @@ function renderDoc(){
 
   const terms = [["Laskutus",t.billing||FALLBACK.billing],["Maksuehto",t.payment||FALLBACK.payment]];
 
-  const cust = [c.contact, c.address, c.ytunnus&&("Y-tunnus "+c.ytunnus), c.email, c.phone, c.einvoice&&("Verkkolasku: "+c.einvoice)].filter(Boolean).map(esc).join("\n");
+  const cust = [c.contact, c.address, c.ytunnus&&("Y-tunnus "+c.ytunnus), c.email, c.phone].filter(Boolean).map(esc).join("\n");
   const send = [s.contact, s.address, s.email, s.phone].filter(Boolean).map(esc).join("\n");
   const [w1,w2] = (s.company||"").replace(/\s+Oy$/i,"").toUpperCase().split(/\s+(.+)/);
 
@@ -420,7 +418,7 @@ function renderDoc(){
     <div class="d-head">
       <div class="brand">${MARK}<div class="word">${esc(w1||"")}<small>${esc(w2||"")}</small></div></div>
       <div class="d-title"><h1>Tilausvahvistus</h1>
-        <dl class="meta"><dt>Numero</dt><dd>${E(o.number,"—")}</dd><dt>Päiväys</dt><dd>${E(fiDate(o.date),"—")}</dd>${o.ref?`<dt>Viite</dt><dd>${esc(o.ref)}</dd>`:""}${o.domain?`<dt>Sivusto</dt><dd>${esc(cleanDomain(o.domain))}</dd>`:""}${o.kickoff?`<dt>Aloituspalaveri</dt><dd>${esc(fiDateTime(o.kickoff))}</dd>`:""}</dl></div>
+        <dl class="meta"><dt>Numero</dt><dd>${E(o.number,"—")}</dd><dt>Päiväys</dt><dd>${E(fiDate(o.date),"—")}</dd>${o.domain?`<dt>Sivusto</dt><dd>${esc(cleanDomain(o.domain))}</dd>`:""}${o.kickoff?`<dt>Aloituspalaveri</dt><dd>${esc(fiDateTime(o.kickoff))}</dd>`:""}</dl></div>
     </div>
     <div class="bar"></div>
     <div class="parties">
