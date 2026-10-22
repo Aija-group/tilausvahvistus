@@ -158,6 +158,7 @@
   <div class="actions">
     <button class="primary" id="btnPdf">Tallenna PDF</button>
     <button class="accent" id="btnSend">Vie CRM:ään</button>
+    <button id="btnLink">Kopioi siirtotietolinkki</button>
     <button class="ghost" id="btnClear">Tyhjennä</button>
   </div>
 
@@ -333,6 +334,11 @@ $("#btnSend").onclick=async()=>{
     bumpSeq(); toast(j.updated ? "Päivitetty CRM:ssä ✓" : "Viety CRM:ään ✓");
   }catch(e){ toast("Vienti epäonnistui: "+e.message) }
   finally{ sending=false; b.textContent="Vie CRM:ään"; b.disabled=false }
+};
+$("#btnLink").onclick=async()=>{
+  const d=cleanDomain(state.o.domain); if(!d){ toast("Täytä domain ensin"); return }
+  const u=`${location.origin}/siirtotiedot/?domain=${encodeURIComponent(d)}&yritys=${encodeURIComponent(state.c.company)}&email=${encodeURIComponent(state.c.email)}&nimi=${encodeURIComponent(state.c.contact)}`;
+  try{ await navigator.clipboard.writeText(u); toast("Siirtotietolinkki kopioitu, liitä asiakkaan viestiin") }catch(e){ prompt("Kopioi linkki:", u) }
 };
 $("#btnClear").onclick=()=>{
   if(!confirm("Tyhjennetäänkö asiakkaan ja tilauksen tiedot?")) return;

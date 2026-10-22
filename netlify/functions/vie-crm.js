@@ -29,6 +29,8 @@ exports.handler = async (event) => {
   const cf = { Domain: domain, "Vahvistus #": d.tilausnumero || "", "Myyjä": d.myyja || "" };
   const kp = isoDate(d.paivays); if (kp) cf["Kauppapäivä"] = kp;
   if (kickoff) cf["Aloituspalaveri"] = kickoff;
+  cf["Siirtotiedot pyydetty"] = new Date().toISOString().slice(0, 10);   // lomakelinkki lähtee vahvistuksen mukana
+  const siirtoLinkki = `https://ryyderintilausvahvistus.netlify.app/siirtotiedot/?domain=${encodeURIComponent(domain)}&yritys=${encodeURIComponent(d.asiakas)}&email=${encodeURIComponent(d.sahkoposti)}&nimi=${encodeURIComponent(d.yhteyshenkilo || "")}`;
   Object.keys(cf).forEach(k => { if (!cf[k]) delete cf[k]; });
 
   const body = {
@@ -38,8 +40,8 @@ exports.handler = async (event) => {
       deal_name: `${d.asiakas} – ${domain}`,
       value: firstEur(d.kertaluonteiset) || undefined,
       source: "tilausvahvistus",
-      notes: `Tilausvahvistus ${d.tilausnumero || ""} ${d.paivays || ""}\nMyyjä: ${d.myyja || ""}\nY-tunnus: ${d.ytunnus || ""}\nLaskutusosoite: ${d.laskutusosoite || ""}\n\n${d.tilausrivit || ""}\n${d.kertaluonteiset ? "Kertamaksu: " + d.kertaluonteiset + "\n" : ""}${d.kuukausittain ? "Hosting: " + d.kuukausittain + "\n" : ""}Laskutus: ${d.laskutus || ""}\nMaksuehto: ${d.maksuehto || ""}\n${d.lisatiedot || ""}`,
-      next_action: kickoff ? `Aloituspalaveri ${kickoff}. Ville: lähetä vahvistus Visma Signiin.` : "Ville: lähetä vahvistus Visma Signiin ja sovi aloituspalaveri",
+      notes: `Tilausvahvistus ${d.tilausnumero || ""} ${d.paivays || ""}\nMyyjä: ${d.myyja || ""}\nY-tunnus: ${d.ytunnus || ""}\nLaskutusosoite: ${d.laskutusosoite || ""}\n\n${d.tilausrivit || ""}\n${d.kertaluonteiset ? "Kertamaksu: " + d.kertaluonteiset + "\n" : ""}${d.kuukausittain ? "Hosting: " + d.kuukausittain + "\n" : ""}Laskutus: ${d.laskutus || ""}\nMaksuehto: ${d.maksuehto || ""}\n${d.lisatiedot || ""}\n\nSiirtotietolomake: ${siirtoLinkki}`,
+      next_action: `Ville: lähetä vahvistus Visma Signiin ja siirtotietolomake ${siirtoLinkki}` + (kickoff ? ` · Aloituspalaveri ${kickoff}` : " · sovi aloituspalaveri"),
     },
     custom_fields: cf,
     external: { source: "tilausvahvistus", id: `${d.tilausnumero || "x"}|${domain}` },

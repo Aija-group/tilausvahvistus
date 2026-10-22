@@ -38,7 +38,7 @@
   <h1>Siirtotiedot uutta sivustoa varten</h1>
   <p class="lead">Nämä tiedot tarvitaan, jotta uusi sivusto saadaan omaan osoitteeseenne ja sähköposti toimii koko ajan. Vastaa sen verran kuin tiedät, loput käydään läpi aloituspalaverissa. <b>Älä kirjoita salasanoja tähän lomakkeeseen.</b></p>
 
-  <form name="siirtotiedot" method="POST" action="/siirtotiedot/kiitos.html" data-netlify="true" netlify-honeypot="bot-field">
+  <form name="siirtotiedot" method="POST" action="/siirtotiedot/kiitos.html" data-netlify="true" netlify-honeypot="bot-field" id="f">
     <input type="hidden" name="form-name" value="siirtotiedot">
     <p class="hp"><label>Älä täytä: <input name="bot-field"></label></p>
 
@@ -127,10 +127,30 @@
       <textarea name="lisatiedot" rows="3" placeholder="Kysymyksiä, toiveita, aikatauluasioita"></textarea>
     </fieldset>
 
-    <button type="submit">Lähetä tiedot</button>
+    <button type="submit" id="send">Lähetä tiedot</button>
+    <p class="note" id="err" hidden></p>
   </form>
 </main>
 <script>
+  // Lähetys: 1) Fluid-merkintä (funktio), 2) Netlify Forms (ilmoitus + putki), 3) kiitos-sivu
+  document.getElementById('f').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target, btn = document.getElementById('send'), err = document.getElementById('err');
+    btn.disabled = true; btn.textContent = 'Lähetetään…'; err.hidden = true;
+    const data = Object.fromEntries(new FormData(form).entries());
+    try {
+      const r = await fetch('/.netlify/functions/siirtotiedot', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok && r.status !== 404) throw new Error(j.error || ('HTTP ' + r.status));   // 404 = diiliä ei löydy: tiedot menevät silti perille lomakkeena
+    } catch (ex) { console.warn('Fluid:', ex.message); }
+    try {
+      await fetch('/', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(data).toString() });
+      location.href = '/siirtotiedot/kiitos.html';
+    } catch (ex) {
+      err.textContent = 'Lähetys ei onnistunut. Yritä uudelleen tai lähetä tiedot sähköpostilla osoitteeseen sulo@aijagroup.fi.'; err.hidden = false;
+      btn.disabled = false; btn.textContent = 'Lähetä tiedot';
+    }
+  });
   // Esitäyttö linkistä: ?domain=&yritys=&email=&nimi=
   const q = new URLSearchParams(location.search);
   const pre = {domain:'domain', yritys:'yritys', email:'sahkoposti', nimi:'yhteyshenkilo'};
