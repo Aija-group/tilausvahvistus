@@ -152,9 +152,7 @@
   </section>
 
   <div class="actions">
-    <button class="primary" id="btnPdf">Tallenna PDF</button>
-    <button class="accent" id="btnSend">Vie CRM:ään</button>
-    <button id="btnLink">Kopioi siirtotietolinkki</button>
+    <button class="accent" id="btnSend">Lähetä tilaus</button>
     <button class="ghost" id="btnClear">Tyhjennä</button>
   </div>
 
@@ -291,7 +289,7 @@ function bindFields(){
 
 // ---------- napit ----------
 let printing=false;
-$("#btnPdf").onclick=()=>{ printing=true; bumpSeq(); window.print() };
+// PDF: selaimen tulostus (cmd+P) toimii edelleen; vahvistus-PDF syntyy putkessa automaattisesti.
 window.addEventListener("afterprint",()=>{
   if(!printing) return; printing=false;
   const m=(state.o.number||"").match(/^(.*?)(\d+)$/);
@@ -320,8 +318,8 @@ $("#btnSend").onclick=async()=>{
   if(!state.c.company) miss.push("yritys"); if(!state.c.email) miss.push("sähköposti"); if(!cleanDomain(state.o.domain)) miss.push("domain");
   if(!state.o.kickoff) miss.push("aloituspalaverin aika"); if(!num(state.p.site)) miss.push("verkkosivuston hinta");
   if(miss.length){ toast("Puuttuu: "+miss.join(", ")); return }
-  if(!confirm(`Viedäänkö tilaus ${state.o.number} (${state.c.company}) CRM:ään?`)) return;
-  sending=true; const b=$("#btnSend"); b.textContent="Viedään…"; b.disabled=true;
+  if(!confirm(`Lähetetäänkö tilaus (${state.c.company})? Asiakkaalle lähtee viesti ja kalenterikutsu, tilaus menee CRM:ään.`)) return;
+  sending=true; const b=$("#btnSend"); b.textContent="Lähetetään…"; b.disabled=true;
   try{
     const f=sendFields();
     // 1) Fluid CRM suoraan (Netlify-funktio, avain palvelimella)
@@ -331,14 +329,11 @@ $("#btnSend").onclick=async()=>{
     // 2) Netlify Forms (sähköposti-ilmoitus + putken webhook: Drive, kalenteri, taulukko)
     const body=new URLSearchParams({"form-name":"tilausvahvistus","bot-field":"",...f});
     await fetch("/",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:body.toString()}).catch(()=>{});
-    bumpSeq(); toast(j.updated ? "Päivitetty CRM:ssä ✓" : "Viety CRM:ään ✓");
+    bumpSeq(); toast(j.updated ? "Tilaus päivitetty ✓" : "Tilaus lähetetty ✓");
+    const m=(state.o.number||"").match(/^(.*?)(\d+)$/);   // seuraava tilausnumero valmiiksi
+    state.o.number = m ? m[1]+String(parseInt(m[2],10)+1).padStart(m[2].length,"0") : nextNumber(); save();
   }catch(e){ toast("Vienti epäonnistui: "+e.message) }
-  finally{ sending=false; b.textContent="Vie CRM:ään"; b.disabled=false }
-};
-$("#btnLink").onclick=async()=>{
-  const d=cleanDomain(state.o.domain); if(!d){ toast("Täytä domain ensin"); return }
-  const u=`${location.origin}/siirtotiedot/?domain=${encodeURIComponent(d)}&yritys=${encodeURIComponent(state.c.company)}&email=${encodeURIComponent(state.c.email)}&nimi=${encodeURIComponent(state.c.contact)}`;
-  try{ await navigator.clipboard.writeText(u); toast("Siirtotietolinkki kopioitu, liitä asiakkaan viestiin") }catch(e){ prompt("Kopioi linkki:", u) }
+  finally{ sending=false; b.textContent="Lähetä tilaus"; b.disabled=false }
 };
 $("#btnClear").onclick=()=>{
   if(!confirm("Tyhjennetäänkö asiakkaan ja tilauksen tiedot?")) return;
