@@ -120,6 +120,12 @@
       <div><label>Päiväys</label><input data-k="o.date" type="date"></div>
       <div><label>Domain</label><input data-k="o.domain" placeholder="esimerkki.fi" autocapitalize="none" spellcheck="false"></div>
       <div><label>Aloituspalaveri</label><input data-k="o.kickoff" type="datetime-local"></div>
+      <div class="full"><label>Myyjä</label>
+        <select data-k="s.contact" id="myyja">
+          <option>Ville Waara</option>
+          <option>Sulo Mäki</option>
+        </select>
+      </div>
     </div>
   </section>
 
@@ -167,8 +173,7 @@
     <div class="grid">
       <div class="full"><label>Yritys</label><input data-k="s.company"></div>
       <div><label>Y-tunnus</label><input data-k="s.ytunnus"></div>
-      <div><label>Yhteyshenkilö (myyjä)</label><input data-k="s.contact"></div>
-      <div><label>Sähköposti</label><input data-k="s.email"></div>
+      <div><label>Myyjän sähköposti</label><input data-k="s.email"></div>
       <div><label>Puhelin</label><input data-k="s.phone"></div>
       <div class="full"><label>Osoite</label><textarea data-k="s.address" rows="2"></textarea></div>
       <div><label>Verkkosivu</label><input data-k="s.web"></div>
@@ -191,12 +196,13 @@
   <textarea name="verkkolasku"></textarea><textarea name="tilausrivit"></textarea><textarea name="kertaluonteiset"></textarea>
   <textarea name="kuukausittain"></textarea><textarea name="laskutus"></textarea><textarea name="maksuehto"></textarea>
   <textarea name="lisatiedot"></textarea><textarea name="domain"></textarea><textarea name="aloituspalaveri"></textarea>
-  <textarea name="alasivut"></textarea><textarea name="myyja"></textarea>
+  <textarea name="alasivut"></textarea><textarea name="myyja"></textarea><textarea name="myyja_email"></textarea>
 </form>
 
 <script>
 const MARK = '<svg viewBox="0 0 40 40"><rect width="40" height="40" rx="9" fill="#14130f"/><circle cx="14" cy="14" r="4" fill="#ff4d1a"/><circle cx="26" cy="14" r="4" fill="#ff4d1a"/><rect x="9" y="24" width="22" height="5" rx="2.5" fill="#f4f1ea"/></svg>';
 const VAT = 25.5;
+const MYYJAT = {"Ville Waara":"ville@aijagroup.fi", "Sulo Mäki":"sulo@aijagroup.fi"};
 const SENDER_DEFAULT = {company:"Äijä Group Oy", ytunnus:"3412426-3", contact:"Ville Waara", email:"ville@aijagroup.fi", phone:"", address:"Sysimiiluntie 15 B 4\n33870 Tampere", web:"aijagroup.fi", iban:""};
 const BILLING = {
   kerralla:"Verkkosivu kertamaksulla, hosting 3 kk välein.",
@@ -287,6 +293,9 @@ function bindFields(){
     el.value = get(el.dataset.k) ?? "";
     el.oninput = el.onchange = ()=>{ set(el.dataset.k, el.value); update() };
   });
+  // Myyjä-valinta asettaa myös sähköpostin
+  const my=$("#myyja"); if(my){ if(!MYYJAT[state.s.contact]) { state.s.contact="Ville Waara"; my.value=state.s.contact }
+    my.addEventListener("change", ()=>{ state.s.email=MYYJAT[my.value]||state.s.email; const e=document.querySelector('[data-k="s.email"]'); if(e) e.value=state.s.email; update() }); }
 }
 
 // ---------- napit ----------
@@ -310,7 +319,7 @@ function sendFields(){
     kertaluonteiset:`${eur(k.site.net)} alv 0 % + alv ${vat} % ${eur(k.site.vat)} = ${eur(k.site.gross)}`,
     kuukausittain:`${eur(k.host.net)} alv 0 % + alv ${vat} % ${eur(k.host.vat)} = ${eur(k.host.gross)} / kk`,
     laskutus:billingText(), maksuehto:t.payment, lisatiedot:t.notes,
-    domain, aloituspalaveri:o.kickoff, alasivut:"", myyja:s.contact
+    domain, aloituspalaveri:o.kickoff, alasivut:"", myyja:s.contact, myyja_email:s.email
   };
 }
 let sending=false;
