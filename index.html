@@ -118,7 +118,7 @@
     <div class="grid">
       <div><label>Tilausnumero</label><input data-k="o.number" placeholder="#1"></div>
       <div><label>Päiväys</label><input data-k="o.date" type="date"></div>
-      <div><label>Domain</label><input data-k="o.domain" placeholder="esimerkki.fi" autocapitalize="none" spellcheck="false"></div>
+      <div><label>Domain <small id="domState"></small></label><input data-k="o.domain" placeholder="esimerkki.fi" autocapitalize="none" spellcheck="false" id="domainIn"></div>
       <div><label>Aloituspalaveri</label><input data-k="o.kickoff" type="datetime-local"></div>
       <div class="full"><label>Myyjä</label>
         <select data-k="s.contact" id="myyja">
@@ -394,6 +394,31 @@ async function ytjLookup(){
 }
 const ytjEl=document.querySelector('[data-k="c.ytunnus"]');
 ytjEl.addEventListener("input", ()=>{ $("#ytjState").textContent=""; ytjLast=""; if(/^\d{7}-?\d$/.test(ytjEl.value.trim())) ytjLookup() });
+
+// ---------- esitäyttö domainista (sivu + YTJ) ----------
+let domLast="", domTimer=null;
+const domEl=$("#domainIn");
+async function domainLookup(){
+  const d=cleanDomain(domEl.value); const st=$("#domState");
+  if(!/^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$/.test(d) || d===domLast) return;
+  domLast=d; st.textContent="haetaan…";
+  try{
+    const r=await fetch("/.netlify/functions/esitaytto?domain="+encodeURIComponent(d));
+    const j=await r.json();
+    if(!j.ok){ st.textContent=""; return }
+    const filled=[];
+    if(j.ytunnus && !state.c.ytunnus){ set("c.ytunnus", j.ytunnus); filled.push("Y-tunnus") }
+    if(j.company && !state.c.company){ set("c.company", j.company); filled.push("yritys") }
+    if(j.address && !state.c.address){ set("c.address", j.address); filled.push("osoite") }
+    if(j.emails?.[0] && !state.c.email){ set("c.email", j.emails[0]); filled.push("sähköposti") }
+    if(j.phones?.[0] && !state.c.phone){ set("c.phone", j.phones[0]); filled.push("puhelin") }
+    bindFields(); update(); ytjLast=state.c.ytunnus||"";
+    if(filled.length){ st.textContent=(j.lahde||"haettu")+" ✓"; toast("Esitäytetty: "+filled.join(", ")+". Tarkista sähköposti ja yhteyshenkilö.") }
+    else st.textContent=j.sivuLoytyi ? "ei löytynyt tietoja" : "sivu ei vastaa";
+  }catch(e){ st.textContent="" }
+}
+domEl.addEventListener("input", ()=>{ clearTimeout(domTimer); domTimer=setTimeout(domainLookup, 700) });
+domEl.addEventListener("blur", domainLookup);
 ytjEl.addEventListener("blur", ytjLookup);
 
 bindFields(); renderDoc();
