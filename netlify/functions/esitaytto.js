@@ -28,7 +28,13 @@ function extract(html, domain) {
   const bad = /example|sentry|wixpress|wordpress|\.png|\.jpg|\.svg|@2x|noreply|no-reply/i;
   const emails = [...new Set((text.match(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi) || []).map(e => e.toLowerCase()).filter(e => !bad.test(e)))];
   const own = emails.filter(e => e.endsWith("@" + domain)), other = emails.filter(e => !e.endsWith("@" + domain));
-  const phones = [...new Set((text.match(/(?:\+358|0)\s?[1-9](?:[\s-]?\d){5,9}/g) || []).map(p => p.replace(/\s+/g, " ").trim()).filter(p => p.replace(/\D/g, "").length >= 7))];
+  const noYt = text.replace(/\b\d{7}\s?-\s?\d\b/g, " ");
+  const seen = new Set(), phones = [];
+  for (const m of noYt.matchAll(/(?<![\d-])(?:\+358|0)\s?[1-9]\d?(?:[\s-]?\d){6,8}(?![\d-])/g)) {
+    const p = m[0].replace(/\s+/g, " ").trim(), key = p.replace(/\D/g, "").replace(/^358/, "0");
+    if (key.length < 9 || key.length > 11 || seen.has(key)) continue;
+    seen.add(key); phones.push(p);
+  }
   return { ytunnukset: [...yt], emails: [...own, ...other].slice(0, 5), phones: phones.slice(0, 3) };
 }
 function company(c) {
