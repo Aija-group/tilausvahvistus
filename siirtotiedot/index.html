@@ -36,95 +36,48 @@
     <b>Äijä Group</b>
   </header>
   <h1>Siirtotiedot uutta sivustoa varten</h1>
-  <p class="lead">Nämä tiedot tarvitaan, jotta uusi sivusto saadaan omaan osoitteeseenne ja sähköposti toimii koko ajan. Vastaa sen verran kuin tiedät, loput käydään läpi aloituspalaverissa. <b>Älä kirjoita salasanoja tähän lomakkeeseen.</b></p>
+  <p class="lead">Kolme kysymystä, jotta uusi sivu saadaan omaan osoitteeseenne ja sähköposti toimii koko ajan. Vastaa sen verran kuin tiedät. <b>Älä kirjoita salasanoja tähän.</b></p>
 
   <form name="siirtotiedot" method="POST" action="/siirtotiedot/kiitos.html" data-netlify="true" netlify-honeypot="bot-field" id="f">
     <input type="hidden" name="form-name" value="siirtotiedot">
     <p class="hp"><label>Älä täytä: <input name="bot-field"></label></p>
 
     <fieldset>
-      <legend>Perustiedot</legend>
       <div class="row">
         <div><label>Yritys</label><input name="yritys" required></div>
-        <div><label>Verkko-osoite <small>esim. esimerkki.fi</small></label><input name="domain" required autocapitalize="none"></div>
+        <div><label>Verkko-osoite</label><input name="domain" required autocapitalize="none"></div>
         <div><label>Yhteyshenkilö</label><input name="yhteyshenkilo" required></div>
         <div><label>Sähköposti</label><input name="sahkoposti" type="email" required></div>
       </div>
     </fieldset>
 
     <fieldset>
-      <legend>Verkko-osoite (domain)</legend>
-      <p class="hint">Osoite siirretään teidän nimiinne NordicHostille. Siirtoon tarvitaan välittäjänvaihtoavain (.fi) tai auth-koodi (.com). Avain syötetään NordicHostin tilauksessa, sitä ei lähetetä meille.</p>
-      <label>Missä osoite on nyt rekisteröity? <small>esim. Domainkeskus, Louhi, Fonecta, Zoner, en tiedä</small></label>
+      <label>Missä verkko-osoite ja nykyinen sivu ovat nyt? <small>esim. Zoner, Hostingpalvelu, Fonecta, Wix, en tiedä</small></label>
       <input name="valittaja">
-      <label>Välittäjänvaihtoavain</label>
-      <select name="avain">
-        <option value="">Valitse</option>
-        <option>Haen avaimen itse (.fi: Traficomin Domainhaku, muut: välittäjän paneeli)</option>
-        <option>Tarvitsen apua avaimen hakemiseen</option>
-        <option>Nykyinen toimittaja hoitaa osoitetta, pyydän avaimen häneltä</option>
-        <option>En tiedä</option>
-      </select>
-      <label>Missä DNS-asetuksia hallitaan? <small>webhotelli, välittäjä, Cloudflare, mainostoimisto, en tiedä</small></label>
-      <input name="dns">
-    </fieldset>
 
-    <fieldset>
-      <legend>Sähköposti</legend>
-      <p class="hint">Tärkein kysymys. Sähköposti ei saa katketa siirrossa, joten meidän pitää tietää missä se on.</p>
       <label>Missä yrityksen sähköposti on?</label>
       <select name="posti">
         <option value="">Valitse</option>
-        <option>Samassa webhotellissa kuin nykyinen sivu (webmail)</option>
+        <option>Samassa webhotellissa kuin nykyinen sivu</option>
         <option>Google Workspace (Gmail)</option>
         <option>Microsoft 365 (Outlook)</option>
-        <option>Muualla</option>
         <option>Osoitteella ei ole sähköpostia (käytämme esim. gmail.com)</option>
         <option>En tiedä</option>
       </select>
-      <div class="row">
-        <div><label>Postilaatikoita <small>kpl</small></label><input name="postilaatikot" type="number" min="0"></div>
-        <div><label>Tarkennus <small>jos "muualla"</small></label><input name="posti_muu"></div>
-      </div>
-    </fieldset>
 
-    <fieldset>
-      <legend>Nykyinen sivu ja toimittaja</legend>
-      <div class="row">
-        <div><label>Nykyinen webhotelli / palvelu <small>esim. Hostingpalvelu, Zoner, Wix, Kotisivukone</small></label><input name="webhotelli"></div>
-        <div><label>Kuka hoitaa nykyisiä sivuja?</label><input name="sivutoimittaja"></div>
-        <div><label>Sopimuksen irtisanomisaika <small>jos tiedossa</small></label><input name="irtisanomisaika"></div>
-        <div><label>Mitä nykyisiltä sivuilta pitää säilyttää?</label><input name="sailytettava"></div>
-      </div>
-      <div class="note">Nykyistä palvelua ei irtisanota ennen kuin uusi sivu on julkaistu ja todettu toimivaksi. Paneelitunnukset annetaan puhelimessa, ei tässä.</div>
-    </fieldset>
+      <label>Välittäjänvaihtoavain <small>osoitteen siirtoon, syötetään NordicHostin tilauksessa</small></label>
+      <select name="avain">
+        <option value="">Valitse</option>
+        <option>Haen avaimen itse</option>
+        <option>Tarvitsen apua avaimen hakemiseen</option>
+        <option>En tiedä mikä se on</option>
+      </select>
 
-    <fieldset>
-      <legend>Google ja seuranta</legend>
-      <label>Google-yritysprofiili, Analytics, Search Console, Google Ads: mitkä ovat käytössä ja kuka hallitsee? <small>yrityksen oma tili, mainostoimisto, ei tiedossa</small></label>
-      <textarea name="google" rows="3"></textarea>
-    </fieldset>
+      <label>Uuden sivun yhteydenotot osoitteeseen</label>
+      <input name="lomake_email" type="email">
 
-    <fieldset>
-      <legend>Uuden sivun yhteydenotot</legend>
-      <div class="row">
-        <div><label>Lomakkeen viestit osoitteeseen</label><input name="lomake_email" type="email"></div>
-        <div><label>Puhelinnumero sivulle</label><input name="lomake_puhelin"></div>
-      </div>
-    </fieldset>
-
-    <fieldset>
-      <legend>NordicHost-tili</legend>
-      <p class="hint">Hosting ja osoite tulevat teidän omalle tilillenne suomalaiselle NordicHostille. Tilaus tulee linkkinä, jonka maksatte itse.</p>
-      <div class="row">
-        <div><label>Tilin sähköposti</label><input name="nh_email" type="email"></div>
-        <div><label>Tilin puhelinnumero</label><input name="nh_puhelin"></div>
-      </div>
-    </fieldset>
-
-    <fieldset>
-      <legend>Muuta</legend>
-      <textarea name="lisatiedot" rows="3" placeholder="Kysymyksiä, toiveita, aikatauluasioita"></textarea>
+      <label>Muuta <small>kysymyksiä, toiveita, aikataulu</small></label>
+      <textarea name="lisatiedot" rows="3"></textarea>
     </fieldset>
 
     <button type="submit" id="send">Lähetä tiedot</button>
