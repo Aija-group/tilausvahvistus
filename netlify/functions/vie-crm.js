@@ -30,7 +30,7 @@ exports.handler = async (event) => {
   const kp = isoDate(d.paivays); if (kp) cf["Kauppapäivä"] = kp;
   if (kickoff) cf["Aloituspalaveri"] = kickoff;
   cf["Siirtotiedot pyydetty"] = new Date().toISOString().slice(0, 10);   // lomakelinkki lähtee vahvistuksen mukana
-  const siirtoLinkki = `https://ryyderintilausvahvistus.netlify.app/siirtotiedot/?domain=${encodeURIComponent(domain)}&yritys=${encodeURIComponent(d.asiakas)}&email=${encodeURIComponent(d.sahkoposti)}&nimi=${encodeURIComponent(d.yhteyshenkilo || "")}`;
+  const siirtoLinkki = `https://aija-group.netlify.app/siirtotiedot/?domain=${encodeURIComponent(domain)}`;
   Object.keys(cf).forEach(k => { if (!cf[k]) delete cf[k]; });
 
   const body = {
