@@ -35,7 +35,7 @@ exports.handler = async (event) => {
   const domain = clean(d.domain);
   if (!domain) return json(400, { ok: false, error: "domain puuttuu" });
 
-  const rows = [["Yritys", d.yritys], ["Yhteyshenkilö", d.yhteyshenkilo], ["Sähköposti", d.sahkoposti], ["Välittäjä", d.valittaja], ["Avain", d.avain],
+  const rows = [["Yritys", d.yritys], ["Yhteyshenkilö", d.yhteyshenkilo], ["Sähköposti", d.sahkoposti], ["Nykyinen toimittaja", d.valittaja], ["Toimittajan sähköposti", d.toimittaja_email], ["Avain", d.avain],
     ["DNS-hallinta", d.dns], ["Sähköposti missä", d.posti], ["Postilaatikot", d.postilaatikot], ["Posti, tarkennus", d.posti_muu], ["Webhotelli", d.webhotelli],
     ["Sivutoimittaja", d.sivutoimittaja], ["Irtisanomisaika", d.irtisanomisaika], ["Säilytettävä", d.sailytettava], ["Google", d.google],
     ["Lomakkeen viestit", d.lomake_email], ["Puhelin sivulle", d.lomake_puhelin], ["NordicHost-tili", [d.nh_email, d.nh_puhelin].filter(Boolean).join(" / ")], ["Lisätiedot", d.lisatiedot]];

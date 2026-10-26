@@ -36,7 +36,7 @@
     <b>Äijä Group</b>
   </header>
   <h1>Siirtotiedot uutta sivustoa varten</h1>
-  <p class="lead">Kolme kysymystä, jotta uusi sivu saadaan omaan osoitteeseenne ja sähköposti toimii koko ajan. Vastaa sen verran kuin tiedät. <b>Älä kirjoita salasanoja tähän.</b></p>
+  <p class="lead">Muutama kysymys, jotta uusi sivu saadaan omaan osoitteeseenne ja sähköposti toimii koko ajan. Vastaa sen verran kuin tiedät. <b>Älä kirjoita salasanoja tähän.</b></p>
 
   <form name="siirtotiedot" method="POST" action="/siirtotiedot/kiitos.html" data-netlify="true" netlify-honeypot="bot-field" id="f">
     <input type="hidden" name="form-name" value="siirtotiedot">
@@ -59,13 +59,8 @@
         <option>En tiedä</option>
       </select>
 
-      <label>Välittäjänvaihtoavain <small>osoitteen siirtoon, syötetään NordicHostin tilauksessa</small></label>
-      <select name="avain">
-        <option value="">Valitse</option>
-        <option>Haen avaimen itse</option>
-        <option>Tarvitsen apua avaimen hakemiseen</option>
-        <option>En tiedä mikä se on</option>
-      </select>
+      <label>Nykyisen palveluntarjoajan sähköposti <small>niin osaamme pyytää tarvittavat tiedot siirtoa varten</small></label>
+      <input name="toimittaja_email" type="email" autocapitalize="none" placeholder="esim. asiakaspalvelu@palveluntarjoaja.fi">
 
       <label>Uuden sivun yhteydenotot osoitteeseen</label>
       <input name="lomake_email" type="email">
