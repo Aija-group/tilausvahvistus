@@ -43,15 +43,9 @@
     <p class="hp"><label>Älä täytä: <input name="bot-field"></label></p>
 
     <fieldset>
-      <div class="row">
-        <div><label>Yritys</label><input name="yritys" required></div>
-        <div><label>Verkko-osoite</label><input name="domain" required autocapitalize="none"></div>
-        <div><label>Yhteyshenkilö</label><input name="yhteyshenkilo" required></div>
-        <div><label>Sähköposti</label><input name="sahkoposti" type="email" required></div>
-      </div>
-    </fieldset>
+      <label>Verkko-osoite <small>esim. esimerkki.fi</small></label>
+      <input name="domain" required autocapitalize="none">
 
-    <fieldset>
       <label>Missä verkko-osoite ja nykyinen sivu ovat nyt? <small>esim. Zoner, Hostingpalvelu, Fonecta, Wix, en tiedä</small></label>
       <input name="valittaja">
 
@@ -104,9 +98,9 @@
       btn.disabled = false; btn.textContent = 'Lähetä tiedot';
     }
   });
-  // Esitäyttö linkistä: ?domain=&yritys=&email=&nimi=
+  // Esitäyttö linkistä: ?domain=
   const q = new URLSearchParams(location.search);
-  const pre = {domain:'domain', yritys:'yritys', email:'sahkoposti', nimi:'yhteyshenkilo'};
+  const pre = {domain:'domain'};
   for (const k in pre) { const v = q.get(k); if (v) { const el = document.querySelector(`[name="${pre[k]}"]`); if (el && !el.value) el.value = v; } }
 </script>
 </body>
