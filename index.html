@@ -289,7 +289,7 @@ function bindFields(){
 
 // ---------- napit ----------
 let printing=false;
-// PDF: selaimen tulostus (cmd+P) toimii edelleen; vahvistus-PDF syntyy putkessa automaattisesti.
+// PDF: lähetyksen jälkeen avataan tulostus/Tallenna PDF; sama PDF lähtee myös liitteenä myyjän ilmoitusviestissä.
 window.addEventListener("afterprint",()=>{
   if(!printing) return; printing=false;
   const m=(state.o.number||"").match(/^(.*?)(\d+)$/);
@@ -329,7 +329,8 @@ $("#btnSend").onclick=async()=>{
     // 2) Netlify Forms (sähköposti-ilmoitus + putken webhook: Drive, kalenteri, taulukko)
     const body=new URLSearchParams({"form-name":"tilausvahvistus","bot-field":"",...f});
     await fetch("/",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:body.toString()}).catch(()=>{});
-    bumpSeq(); toast(j.updated ? "Tilaus päivitetty ✓" : "Tilaus lähetetty ✓");
+    bumpSeq(); toast(j.updated ? "Tilaus päivitetty ✓" : "Tilaus lähetetty ✓ · tallenna PDF");
+    setTimeout(()=>window.print(),600);   // Tallenna PDF -ikkuna myyjälle (Visma Signia varten)
     const m=(state.o.number||"").match(/^(.*?)(\d+)$/);   // seuraava tilausnumero valmiiksi
     state.o.number = m ? m[1]+String(parseInt(m[2],10)+1).padStart(m[2].length,"0") : nextNumber(); save();
   }catch(e){ toast("Vienti epäonnistui: "+e.message) }
