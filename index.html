@@ -190,6 +190,7 @@
 <script>
 const MARK = '<svg viewBox="0 0 40 40"><rect width="40" height="40" rx="9" fill="#14130f"/><circle cx="14" cy="14" r="4" fill="#ff4d1a"/><circle cx="26" cy="14" r="4" fill="#ff4d1a"/><rect x="9" y="24" width="22" height="5" rx="2.5" fill="#f4f1ea"/></svg>';
 const VAT = 25.5;
+const PUTKI_URL="https://script.google.com/macros/s/AKfycbzXKL8abPr58mJYhr96OJN3CqS5r0R7siYjSKrvzB9dBMNC7jOGe1baWFQU7hwz0-Kh/exec";
 const MYYJAT = {"Ville Waara":"ville@aijagroup.fi", "Sulo Mäki":"sulo@aijagroup.fi"};
 const SENDER_DEFAULT = {company:"Äijä Group Oy", ytunnus:"3412426-3", contact:"Ville Waara", email:"ville@aijagroup.fi", phone:"", address:"Sysimiiluntie 15 B 4\n33870 Tampere", web:"aijagroup.fi", iban:""};
 const BILLING = {
@@ -329,6 +330,8 @@ $("#btnSend").onclick=async()=>{
     // 2) Netlify Forms (sähköposti-ilmoitus + putken webhook: Drive, kalenteri, taulukko)
     const body=new URLSearchParams({"form-name":"tilausvahvistus","bot-field":"",...f});
     await fetch("/",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:body.toString()}).catch(()=>{});
+    // 3) Sama tilaus suoraan putken skriptille (varareitti, jos Netlifyn webhook ei toimi; skripti käsittelee tilauksen vain kerran)
+    await fetch(PUTKI_URL,{method:"POST",mode:"no-cors",body:JSON.stringify({form_name:"tilausvahvistus",source:"selain",data:f})}).catch(()=>{});
     bumpSeq(); toast(j.updated ? "Tilaus päivitetty ✓" : "Tilaus lähetetty ✓ · tallenna PDF");
     setTimeout(()=>window.print(),600);   // Tallenna PDF -ikkuna myyjälle (Visma Signia varten)
     const m=(state.o.number||"").match(/^(.*?)(\d+)$/);   // seuraava tilausnumero valmiiksi

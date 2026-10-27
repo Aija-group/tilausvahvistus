@@ -17,6 +17,20 @@ async function fluid(key, method, path, body) {
   return j;
 }
 
+async function findDeal(key, domain) {
+  let cursor = "", pages = 0;
+  while (pages++ < 10) {
+    const j = await fluid(key, "GET", `/deals?pipeline_id=${PIPELINE}&limit=100${cursor ? "&cursor=" + encodeURIComponent(cursor) : ""}`);
+    const list = j.data || [];
+    const hit = list.find(d => (d.status || "active") === "active" &&
+      (clean((d.custom_fields || {}).Domain) === domain || clean(d.website) === domain || String(d.deal_name || d.title || "").toLowerCase().includes(domain)));
+    if (hit) return hit;
+    cursor = (j.pagination || {}).next_cursor || j.next_cursor || "";
+    if (!cursor) break;
+  }
+  return null;
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") return json(405, { ok: false, error: "POST only" });
   const key = process.env.FLUID_API_KEY;
@@ -47,6 +61,13 @@ exports.handler = async (event) => {
     external: { source: "tilausvahvistus", id: `${d.tilausnumero || "x"}|${domain}` },
   };
   try {
+    // Domainilla jo aktiivinen diili (Kauppa Excelistä tuotu tai aiempi lähetys) → päivitetään se, ei luoda toista
+    const vanha = await findDeal(key, domain).catch(() => null);
+    if (vanha) {
+      const notes = (vanha.notes || "").includes(`Tilausvahvistus ${d.tilausnumero || ""} ${d.paivays || ""}`) ? vanha.notes : ((vanha.notes ? vanha.notes + "\n\n" : "") + body.deal.notes);
+      await fluid(key, "PATCH", `/deals?id=${vanha.id}`, { deal_name: body.deal.deal_name, notes, next_action: body.deal.next_action, custom_fields: cf, value: body.deal.value });
+      return json(200, { ok: true, deal_id: vanha.id, created: false, updated: true, reminder: false, url: "https://fluidcrm.io/deals" });
+    }
     const r = await fluid(key, "POST", "/ingest", body);
     let reminder = false;
     if (r.created_deal) {

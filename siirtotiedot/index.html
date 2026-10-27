@@ -87,6 +87,8 @@
     } catch (ex) { console.warn('Fluid:', ex.message); }
     try {
       await fetch('/', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(data).toString() });
+      // Varareitti suoraan putken skriptille (käsitellään vain kerran)
+      await fetch('https://script.google.com/macros/s/AKfycbzXKL8abPr58mJYhr96OJN3CqS5r0R7siYjSKrvzB9dBMNC7jOGe1baWFQU7hwz0-Kh/exec', { method: 'POST', mode: 'no-cors', body: JSON.stringify({ form_name: 'siirtotiedot', source: 'selain', data }) }).catch(() => {});
       location.href = '/siirtotiedot/kiitos.html';
     } catch (ex) {
       err.textContent = 'Lähetys ei onnistunut. Yritä uudelleen tai lähetä tiedot sähköpostilla osoitteeseen sulo@aijagroup.fi.'; err.hidden = false;
