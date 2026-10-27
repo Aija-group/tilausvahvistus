@@ -191,6 +191,9 @@
 const MARK = '<svg viewBox="0 0 40 40"><rect width="40" height="40" rx="9" fill="#14130f"/><circle cx="14" cy="14" r="4" fill="#ff4d1a"/><circle cx="26" cy="14" r="4" fill="#ff4d1a"/><rect x="9" y="24" width="22" height="5" rx="2.5" fill="#f4f1ea"/></svg>';
 const VAT = 25.5;
 const PUTKI_URL="https://script.google.com/macros/s/AKfycbzXKL8abPr58mJYhr96OJN3CqS5r0R7siYjSKrvzB9dBMNC7jOGe1baWFQU7hwz0-Kh/exec";
+// Vanhaksi jäänyt välilehti (27.10.2026: aamulla avattu sivu ajoi vanhaa koodia) → tyhjä lomake ladataan uudelleen, kun välilehteen palataan yli 30 min jälkeen
+const LADATTU=Date.now();
+document.addEventListener("visibilitychange",()=>{ try{ if(document.visibilityState==="visible"&&Date.now()-LADATTU>30*60*1000&&!(state&&state.c&&state.c.company)) location.reload(); }catch(e){} });
 const MYYJAT = {"Ville Waara":"ville@aijagroup.fi", "Sulo Mäki":"sulo@aijagroup.fi"};
 const SENDER_DEFAULT = {company:"Äijä Group Oy", ytunnus:"3412426-3", contact:"Ville Waara", email:"ville@aijagroup.fi", phone:"", address:"Sysimiiluntie 15 B 4\n33870 Tampere", web:"aijagroup.fi", iban:""};
 const BILLING = {

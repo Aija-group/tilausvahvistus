@@ -31,6 +31,19 @@ async function findDeal(key, domain) {
   return null;
 }
 
+// Toimitusputken Apps Script (Drive, kalenteri, PDF, taulukko, viestit). Palvelimelta, selaimesta riippumatta.
+// Skripti käsittelee saman tilauksen vain kerran (avain sisällöstä), joten tämä voi tulla webhookin tai selaimen rinnalla.
+const PUTKI_URL = "https://script.google.com/macros/s/AKfycbzXKL8abPr58mJYhr96OJN3CqS5r0R7siYjSKrvzB9dBMNC7jOGe1baWFQU7hwz0-Kh/exec";
+async function putkeen(d) {
+  const ac = new AbortController(); const t = setTimeout(() => ac.abort(), 12000);
+  try {
+    const r = await fetch(PUTKI_URL, { method: "POST", redirect: "follow", signal: ac.signal, headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ form_name: "tilausvahvistus", source: "vie-crm", data: d }) });
+    const txt = await r.text(); let j = {}; try { j = JSON.parse(txt); } catch (e) {}
+    return j.ok ? (j.duplicate ? "duplicate" : "ok") : "http " + r.status;
+  } catch (e) { return "virhe " + e.message; } finally { clearTimeout(t); }
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") return json(405, { ok: false, error: "POST only" });
   const key = process.env.FLUID_API_KEY;
@@ -66,14 +79,16 @@ exports.handler = async (event) => {
     if (vanha) {
       const notes = (vanha.notes || "").includes(`Tilausvahvistus ${d.tilausnumero || ""} ${d.paivays || ""}`) ? vanha.notes : ((vanha.notes ? vanha.notes + "\n\n" : "") + body.deal.notes);
       await fluid(key, "PATCH", `/deals?id=${vanha.id}`, { deal_name: body.deal.deal_name, notes, next_action: body.deal.next_action, custom_fields: cf, value: body.deal.value });
-      return json(200, { ok: true, deal_id: vanha.id, created: false, updated: true, reminder: false, url: "https://fluidcrm.io/deals" });
+      const putki = await putkeen(d);
+      return json(200, { ok: true, deal_id: vanha.id, created: false, updated: true, reminder: false, putki, url: "https://fluidcrm.io/deals" });
     }
     const r = await fluid(key, "POST", "/ingest", body);
     let reminder = false;
     if (r.created_deal) {
       try { await fluid(key, "POST", "/reminders", { deal_id: r.deal_id, reminder_at: plusBusinessDays(2, 9), note: `Onko ${d.asiakas} allekirjoittanut tilausvahvistuksen Visma Signissa? Jos ei, soita. Allekirjoitettu → siirrä vaiheeseen Vahvistus allekirjoitettu.` }); reminder = true; } catch (e) {}
     }
-    return json(200, { ok: true, deal_id: r.deal_id, created: !!r.created_deal, updated: !!r.updated_deal, reminder, url: "https://fluidcrm.io/deals" });
+    const putki = await putkeen(d);
+    return json(200, { ok: true, deal_id: r.deal_id, created: !!r.created_deal, updated: !!r.updated_deal, reminder, putki, url: "https://fluidcrm.io/deals" });
   } catch (e) {
     return json(502, { ok: false, error: e.message });
   }

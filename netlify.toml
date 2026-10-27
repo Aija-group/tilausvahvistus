@@ -6,6 +6,9 @@
   directory = "netlify/functions"
   node_bundler = "esbuild"
 
+[functions."tarkista-tilaukset"]
+  schedule = "*/10 * * * *"
+
 [[headers]]
   for = "/*"
   [headers.values]
